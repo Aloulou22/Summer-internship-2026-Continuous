@@ -1,0 +1,77 @@
+services:
+  # ==================== AUTH SERVICE ====================
+  auth-db:
+    image: postgres:16-alpine
+    container_name: taskflow-auth-db
+    environment:
+      POSTGRES_USER: auth_user
+      POSTGRES_PASSWORD: auth_pass
+      POSTGRES_DB: auth_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U auth_user -d auth_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: taskflow-auth-service
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    environment:
+      PORT: 3001
+      DB_HOST: auth-db
+      DB_PORT: 5432
+      DB_USER: auth_user
+      DB_PASSWORD: auth_pass
+      DB_NAME: auth_db
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_TTL: 15m
+      REFRESH_TTL_DAYS: 7
+    ports:
+      - '3001:3001'
+
+  # ==================== USER SERVICE ====================
+  user-db:
+    image: postgres:16-alpine
+    container_name: taskflow-user-db
+    environment:
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: user_pass
+      POSTGRES_DB: user_db
+    ports:
+      - '5434:5432'
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user_user -d user_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ./services/user-service
+    container_name: taskflow-user-service
+    depends_on:
+      user-db:
+        condition: service_healthy
+    environment:
+      PORT: 3002
+      DB_HOST: user-db
+      DB_PORT: 5432
+      DB_USER: user_user
+      DB_PASSWORD: user_pass
+      DB_NAME: user_db
+      # SAME secret as auth-service so JWTs verify across services
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - '3002:3002'
+
+volumes:
+  auth-db-data:
+  user-db-data:
