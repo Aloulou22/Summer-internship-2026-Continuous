@@ -1,7 +1,15 @@
 <div class="tf-teams">
   <header class="tf-teams__header">
-    <h1>Teams</h1>
-    <p class="tf-teams__subtitle">Browse teams and see who's on them.</p>
+    <div>
+      <h1>Teams</h1>
+      <p class="tf-teams__subtitle">Browse teams and see who's on them.</p>
+    </div>
+    @if (canManage()) {
+      <button mat-flat-button color="primary" type="button" (click)="createTeam()">
+        <mat-icon>add</mat-icon>
+        New team
+      </button>
+    }
   </header>
 
   @if (loading()) {
@@ -18,7 +26,7 @@
     <tf-empty-state
       icon="groups"
       title="No teams yet"
-      message="Teams are created by an administrator."
+      [message]="canManage() ? 'Create the first one to get started.' : 'Teams are created by an administrator.'"
     />
   } @else {
     <div class="tf-teams__grid">
@@ -27,6 +35,28 @@
           <div class="tf-team-card__header">
             <h2>{{ team.name }}</h2>
             <span class="tf-team-card__count">{{ team.members.length }}</span>
+            @if (canManage()) {
+              <div class="tf-team-card__actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="editTeam(team)"
+                  aria-label="Edit team"
+                  matTooltip="Edit"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
+                  (click)="deleteTeam(team)"
+                  aria-label="Delete team"
+                  matTooltip="Delete"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            }
           </div>
 
           @if (team.description) {

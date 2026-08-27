@@ -26,9 +26,16 @@ export class AuthService {
 
   private readonly _accessToken = signal<string | null>(null);
   private readonly _user = signal<User | null>(null);
+  // True only for the session that just called register() — lets the
+  // dashboard say "Welcome" instead of "Welcome back" for a brand-new
+  // account. Resets on logout/clearSession and doesn't survive a reload
+  // (tryRestoreSession never sets it), which is correct: by the next visit
+  // they really are a returning user.
+  private readonly _justRegistered = signal(false);
 
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = computed(() => this._user() !== null);
+  readonly justRegistered = this._justRegistered.asReadonly();
 
   /** Read synchronously by the auth interceptor on every outgoing request. */
   get accessToken(): string | null {
@@ -40,7 +47,12 @@ export class AuthService {
   register(dto: RegisterRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.base}/register`, dto, { withCredentials: true })
-      .pipe(tap((res) => this.setSession(res)));
+      .pipe(
+        tap((res) => {
+          this.setSession(res);
+          this._justRegistered.set(true);
+        }),
+      );
   }
 
   login(dto: LoginRequest): Observable<AuthResponse> {
@@ -105,5 +117,6 @@ export class AuthService {
   clearSession(): void {
     this._accessToken.set(null);
     this._user.set(null);
+    this._justRegistered.set(false);
   }
 }

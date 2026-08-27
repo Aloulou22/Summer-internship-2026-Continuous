@@ -42,10 +42,33 @@
         <mat-icon>menu</mat-icon>
       </button>
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="tf-shell__search">
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput type="text" placeholder="Search projects, tasks…" aria-label="Search" />
-      </mat-form-field>
+      <div class="tf-shell__search-wrap">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="tf-shell__search">
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            type="text"
+            placeholder="Search projects…"
+            aria-label="Search projects"
+            [(ngModel)]="searchQuery"
+            (keydown.enter)="submitSearch()"
+            (keydown.escape)="searchQuery.set('')"
+          />
+        </mat-form-field>
+
+        @if (searchResults().length > 0) {
+          <ul class="tf-shell__search-results">
+            @for (project of searchResults(); track project.id) {
+              <li>
+                <button type="button" (click)="goToSearchResult(project)">
+                  <mat-icon>folder_open</mat-icon>
+                  <span>{{ project.name }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
 
       <span class="tf-shell__spacer"></span>
 

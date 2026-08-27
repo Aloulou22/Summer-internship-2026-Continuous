@@ -14,3 +14,10 @@ export interface Team {
 export interface TeamDetail extends Team {
   members: Profile[];
 }
+
+export interface CreateTeamRequest {
+  name: string;
+  description?: string;
+}
+
+export type UpdateTeamRequest = Partial<CreateTeamRequest>;

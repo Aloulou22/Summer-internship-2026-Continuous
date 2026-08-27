@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs';
@@ -20,10 +21,12 @@ import { LogoComponent } from '../../shared/ui/logo/logo.component';
 import { AvatarComponent } from '../../shared/ui/avatar/avatar.component';
 import { ThemeService, ThemePreference } from '../../core/services/theme.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ProjectsService } from '../../core/services/projects.service';
 import { NotificationsFeedService } from '../../core/services/notifications-feed.service';
 import { NOTIFICATION_ICON } from '../../shared/constants/notification-meta';
 import { formatRelativeTime } from '../../shared/utils/date.util';
 import { AppNotification } from '../../core/models/notification.model';
+import { Project } from '../../core/models/project.model';
 
 interface NavItem {
   path: string;
@@ -43,6 +46,7 @@ const BASE_NAV_ITEMS: NavItem[] = [
   selector: 'tf-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    FormsModule,
     RouterLink,
     RouterLinkActive,
     RouterOutlet,
@@ -80,6 +84,23 @@ export class ShellComponent {
   protected readonly notificationTime = formatRelativeTime;
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
+  private readonly projectsService = inject(ProjectsService);
+
+  // The topbar search box used to be pure decoration (no handler wired up at
+  // all) — this loads the user's projects once and filters them client-side,
+  // which is enough for "jump to a project by name" without a real search
+  // endpoint. Tasks aren't included: nothing today loads every task the user
+  // can see in one place, so promising task search here would just recreate
+  // the same "looks like it works but doesn't" problem.
+  protected readonly searchQuery = signal('');
+  private readonly allProjects = signal<Project[]>([]);
+  protected readonly searchResults = computed<Project[]>(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return [];
+    return this.allProjects()
+      .filter((p) => p.name.toLowerCase().includes(q))
+      .slice(0, 6);
+  });
 
   protected readonly isHandset = toSignal(
     this.breakpointObserver.observe(Breakpoints.Handset).pipe(map((r) => r.matches)),
@@ -96,6 +117,18 @@ export class ShellComponent {
 
     this.notificationsFeed.start();
     inject(DestroyRef).onDestroy(() => this.notificationsFeed.stop());
+
+    this.projectsService.listMine().subscribe((projects) => this.allProjects.set(projects));
+  }
+
+  goToSearchResult(project: Project): void {
+    this.router.navigate(['/projects', project.id]);
+    this.searchQuery.set('');
+  }
+
+  submitSearch(): void {
+    const [first] = this.searchResults();
+    if (first) this.goToSearchResult(first);
   }
 
   toggleNav(drawer: { toggle: () => void }): void {

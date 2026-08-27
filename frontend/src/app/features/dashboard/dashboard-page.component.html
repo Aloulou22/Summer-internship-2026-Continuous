@@ -1,6 +1,6 @@
 <div class="tf-dashboard">
   <header class="tf-dashboard__header">
-    <h1>Welcome back, {{ firstName() }}</h1>
+    <h1>{{ auth.justRegistered() ? 'Welcome' : 'Welcome back' }}, {{ firstName() }}</h1>
     <p class="tf-dashboard__subtitle">Here's what's happening across your projects.</p>
   </header>
 

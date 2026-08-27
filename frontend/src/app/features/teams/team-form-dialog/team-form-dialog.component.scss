@@ -1,0 +1,11 @@
+.tf-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-1);
+  min-width: 360px;
+  padding-top: var(--tf-space-2);
+
+  @media (max-width: 480px) {
+    min-width: 0;
+  }
+}

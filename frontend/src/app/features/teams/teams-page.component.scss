@@ -4,8 +4,15 @@
   gap: var(--tf-space-5);
 }
 
-.tf-teams__header h1 {
-  font-size: 1.75rem;
+.tf-teams__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--tf-space-3);
+
+  h1 {
+    font-size: 1.75rem;
+  }
 }
 .tf-teams__subtitle {
   margin: var(--tf-space-1) 0 0;
@@ -31,20 +38,41 @@
 .tf-team-card__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--tf-space-2);
 
   h2 {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 1.0625rem;
   }
 }
 .tf-team-card__count {
+  flex-shrink: 0;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--mat-sys-on-surface-variant);
   background: var(--mat-sys-surface-container);
   border-radius: var(--mat-sys-corner-full);
   padding: 1px 8px;
+}
+.tf-team-card__actions {
+  display: flex;
+  flex-shrink: 0;
+
+  button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 }
 
 .tf-team-card__description {
