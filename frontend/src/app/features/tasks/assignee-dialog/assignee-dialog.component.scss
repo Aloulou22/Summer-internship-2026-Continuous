@@ -1,0 +1,21 @@
+.tf-assignee-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tf-assignee-list__item {
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+.tf-assignee-list__empty {
+  padding: var(--tf-space-3);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+  text-align: center;
+}

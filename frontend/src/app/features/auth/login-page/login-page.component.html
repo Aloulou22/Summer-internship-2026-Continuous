@@ -1,0 +1,61 @@
+<div class="tf-auth-screen">
+  <mat-card class="tf-auth-card" appearance="outlined">
+    <div class="tf-auth-card__header">
+      <tf-logo [size]="36" [wordmark]="true" />
+      <p class="tf-auth-card__subtitle">Sign in to your workspace.</p>
+    </div>
+
+    <form class="tf-auth-form" [formGroup]="form" (ngSubmit)="submit()">
+      <mat-form-field appearance="outline">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" required />
+        @if (form.controls.email.hasError('required')) {
+          <mat-error>Email is required</mat-error>
+        } @else if (form.controls.email.hasError('email')) {
+          <mat-error>Enter a valid email</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="current-password"
+          required
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="hidePassword.set(!hidePassword())"
+          [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        @if (form.controls.password.hasError('required')) {
+          <mat-error>Password is required</mat-error>
+        } @else if (form.controls.password.hasError('invalidCredentials')) {
+          <mat-error>Incorrect email or password</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        mat-flat-button
+        color="primary"
+        type="submit"
+        class="tf-auth-submit"
+        [disabled]="submitting()"
+      >
+        @if (submitting()) {
+          <mat-spinner diameter="20" />
+        } @else {
+          <span>Sign in</span>
+        }
+      </button>
+    </form>
+
+    <p class="tf-auth-card__footer">Don't have an account? <a routerLink="/register">Create one</a></p>
+  </mat-card>
+</div>

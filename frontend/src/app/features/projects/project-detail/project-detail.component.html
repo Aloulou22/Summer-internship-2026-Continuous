@@ -1,0 +1,145 @@
+@if (loading()) {
+  <div class="tf-project-detail__skeleton">
+    <tf-skeleton height="1.75rem" width="40%" />
+    <tf-skeleton height="1rem" width="60%" />
+    <tf-skeleton height="12rem" radius="var(--mat-sys-corner-large)" />
+  </div>
+} @else if (notFound()) {
+  <tf-placeholder-page
+    icon="search_off"
+    title="Project not found"
+    note="It may have been deleted, or you don't have access to it."
+  />
+} @else if (project()) {
+  @if (project(); as project) {
+  <div class="tf-project-detail">
+    <a routerLink="/projects" class="tf-project-detail__back">
+      <mat-icon>arrow_back</mat-icon>
+      All projects
+    </a>
+
+    <header class="tf-project-detail__header">
+      <div class="tf-project-detail__title">
+        <h1>{{ project.name }}</h1>
+        <span class="tf-project-detail__status">
+          <mat-icon>{{ projectStatusMeta[project.status].icon }}</mat-icon>
+          {{ projectStatusMeta[project.status].label }}
+        </span>
+      </div>
+
+      @if (canManage()) {
+        <button mat-icon-button type="button" [matMenuTriggerFor]="actions" aria-label="Project actions">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #actions="matMenu">
+          <button mat-menu-item type="button" (click)="editProject()">
+            <mat-icon>edit</mat-icon>
+            <span>Edit project</span>
+          </button>
+          <button mat-menu-item type="button" (click)="deleteProject()">
+            <mat-icon>delete</mat-icon>
+            <span>Delete project</span>
+          </button>
+        </mat-menu>
+      }
+    </header>
+
+    <mat-tab-group animationDuration="200ms">
+      <mat-tab label="Overview">
+        <div class="tf-project-detail__overview">
+          <section class="tf-detail-card">
+            @if (project.description) {
+              <p class="tf-detail-card__description">{{ project.description }}</p>
+            } @else {
+              <p class="tf-detail-card__description tf-detail-card__description--muted">No description yet.</p>
+            }
+
+            <dl class="tf-detail-facts">
+              @if (project.category; as category) {
+                <div class="tf-detail-facts__row">
+                  <dt>Category</dt>
+                  <dd>
+                    <span
+                      class="tf-project-detail__dot"
+                      [style.background]="category.color || 'var(--mat-sys-primary)'"
+                    ></span>
+                    {{ category.name }}
+                  </dd>
+                </div>
+              }
+              @if (project.deadline) {
+                <div class="tf-detail-facts__row">
+                  <dt>Deadline</dt>
+                  <dd
+                    [class.tf-detail-facts__value--overdue]="relDeadline(project.deadline).overdue"
+                    [class.tf-detail-facts__value--soon]="relDeadline(project.deadline).dueSoon"
+                  >
+                    {{ relDeadline(project.deadline).text }}
+                  </dd>
+                </div>
+              }
+              <div class="tf-detail-facts__row">
+                <dt>Owner</dt>
+                <dd>{{ directory.displayName(project.ownerId) }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="tf-detail-card">
+            <div class="tf-detail-card__header">
+              <h2>Members ({{ project.members.length }})</h2>
+              @if (canManage()) {
+                <button mat-stroked-button type="button" (click)="addMember()">
+                  <mat-icon>person_add</mat-icon>
+                  Add member
+                </button>
+              }
+            </div>
+
+            <ul class="tf-member-list">
+              @for (member of project.members; track member.userId) {
+                <li class="tf-member-list__item">
+                  <tf-avatar [name]="directory.displayName(member.userId)" size="36px" />
+                  <div class="tf-member-list__main">
+                    <span class="tf-member-list__name">{{ directory.displayName(member.userId) }}</span>
+                    @if (member.userId === auth.user()?.id) {
+                      <span class="tf-member-list__you">You</span>
+                    }
+                  </div>
+
+                  @if (canManage() && member.role !== 'owner') {
+                    <select
+                      class="tf-member-list__role-select"
+                      [value]="member.role"
+                      (change)="changeMemberRole(member.userId, $any($event.target).value)"
+                      aria-label="Member role"
+                    >
+                      <option value="member">Member</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="removeMember(member.userId)"
+                      [matTooltip]="'Remove ' + directory.displayName(member.userId)"
+                      aria-label="Remove member"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  } @else {
+                    <span class="tf-member-list__role">{{ member.role }}</span>
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Board">
+        <tf-kanban-board [projectId]="project.id" />
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+  }
+}

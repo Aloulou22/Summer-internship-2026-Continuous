@@ -1,0 +1,110 @@
+.tf-profile__skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--tf-space-3);
+  max-width: 400px;
+  margin-inline: auto;
+  padding-top: var(--tf-space-6);
+}
+
+.tf-profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-4);
+  max-width: 640px;
+}
+
+.tf-profile__header {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-4);
+  padding: var(--tf-space-5);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+
+  button {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 560px) {
+    flex-wrap: wrap;
+
+    button {
+      margin-inline-start: 0;
+    }
+  }
+}
+
+.tf-profile__identity {
+  min-width: 0;
+
+  h1 {
+    font-size: 1.375rem;
+  }
+}
+.tf-profile__email {
+  margin: 2px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.tf-profile__badges {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-2);
+  margin-top: var(--tf-space-2);
+}
+.tf-profile__role-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-primary-container);
+  color: var(--mat-sys-on-primary-container);
+}
+.tf-profile__team-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+  }
+}
+
+.tf-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+  padding: var(--tf-space-4);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+
+  h2 {
+    font-size: 0.875rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.tf-profile__bio {
+  white-space: pre-wrap;
+}
+.tf-profile__muted {
+  color: var(--mat-sys-on-surface-variant);
+  font-style: italic;
+}

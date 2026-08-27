@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Assign task</h2>
+
+<mat-dialog-content class="tf-form-content">
+  <mat-form-field appearance="outline">
+    <mat-label>Search people</mat-label>
+    <input matInput [formControl]="search" autocomplete="off" placeholder="Type a name…" />
+  </mat-form-field>
+
+  <ul class="tf-assignee-list">
+    @for (profile of candidates(); track profile.userId) {
+      <li>
+        <button mat-button type="button" class="tf-assignee-list__item" (click)="select(profile.userId)">
+          {{ profile.fullName }}
+        </button>
+      </li>
+    } @empty {
+      <li class="tf-assignee-list__empty">No matches</li>
+    }
+  </ul>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="undefined">Cancel</button>
+</mat-dialog-actions>

@@ -1,0 +1,91 @@
+<h2 mat-dialog-title>{{ data.mode === 'create' ? 'New project' : 'Edit project' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content class="tf-form-content">
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput formControlName="name" required autocomplete="off" />
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>Name is required</mat-error>
+      } @else if (form.controls.name.hasError('minlength')) {
+        <mat-error>Name must be at least 2 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+    </mat-form-field>
+
+    <div class="tf-category-field">
+      <mat-form-field appearance="outline" class="tf-category-field__select">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="categoryId">
+          <mat-option [value]="null">No category</mat-option>
+          @for (category of categories(); track category.id) {
+            <mat-option [value]="category.id">{{ category.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (canManageCategories() && !addingCategory()) {
+        <button
+          mat-icon-button
+          type="button"
+          (click)="addingCategory.set(true)"
+          aria-label="Create a new category"
+          matTooltip="New category"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      }
+    </div>
+
+    @if (addingCategory()) {
+      <div class="tf-category-new">
+        <input
+          type="color"
+          [(ngModel)]="newCategoryColor"
+          [ngModelOptions]="{ standalone: true }"
+          aria-label="Category color"
+        />
+        <input
+          type="text"
+          placeholder="New category name…"
+          [(ngModel)]="newCategoryName"
+          [ngModelOptions]="{ standalone: true }"
+          (keydown.enter)="$event.preventDefault(); createCategory()"
+        />
+        <button mat-button type="button" (click)="createCategory()">Add</button>
+        <button mat-icon-button type="button" (click)="addingCategory.set(false)" aria-label="Cancel">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    }
+
+    <mat-form-field appearance="outline">
+      <mat-label>Deadline</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="deadline" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+    </mat-form-field>
+
+    @if (data.mode === 'edit') {
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (option of statusOptions; track option.value) {
+            <mat-option [value]="option.value">{{ option.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" [mat-dialog-close]="undefined">Cancel</button>
+    <button mat-flat-button color="primary" type="submit">
+      {{ data.mode === 'create' ? 'Create project' : 'Save changes' }}
+    </button>
+  </mat-dialog-actions>
+</form>

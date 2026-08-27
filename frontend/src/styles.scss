@@ -1,0 +1,279 @@
+// =============================================================================
+// TaskFlow — global theme
+//
+// Uses Angular Material's granular M3 token mixins (system-level-colors /
+// -typography / -elevation / -shape / -state) instead of the all-in-one
+// `mat.theme()` so color can be re-applied per light/dark scope without
+// re-emitting (and duplicating) typography, shape and state tokens.
+// =============================================================================
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+// --- Brand palettes ----------------------------------------------------------
+// Violet + orange instead of the CLI's default azure/blue — a cooler, more
+// premium primary paired with a warm accent for CTAs/highlights.
+$tf-light-colors: mat.define-colors((
+  theme-type: light,
+  primary: mat.$violet-palette,
+  tertiary: mat.$orange-palette,
+));
+$tf-dark-colors: mat.define-colors((
+  theme-type: dark,
+  primary: mat.$violet-palette,
+  tertiary: mat.$orange-palette,
+));
+$tf-typography: mat.define-typography((
+  plain-family: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+  brand-family: "'Plus Jakarta Sans', 'Inter', sans-serif",
+  bold-weight: 700,
+  medium-weight: 600,
+  regular-weight: 400,
+));
+
+// Softer, more distinctive corner language than Material's stock M3 shape scale.
+$tf-shape-overrides: (
+  corner-extra-small: 6px,
+  corner-small: 10px,
+  corner-medium: 14px,
+  corner-large: 20px,
+  corner-extra-large: 32px,
+);
+
+:root {
+  @include mat.system-level-colors($tf-light-colors);
+  @include mat.system-level-elevation($tf-light-colors);
+  @include mat.system-level-typography($tf-typography);
+  @include mat.system-level-shape($overrides: $tf-shape-overrides);
+  @include mat.system-level-state();
+}
+
+// Dark mode: system preference by default, overridable by an explicit
+// [data-theme] attribute set by ThemeService (persisted user choice always wins).
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include mat.system-level-colors($tf-dark-colors);
+    @include mat.system-level-elevation($tf-dark-colors);
+  }
+}
+:root[data-theme='dark'] {
+  @include mat.system-level-colors($tf-dark-colors);
+  @include mat.system-level-elevation($tf-dark-colors);
+}
+
+// =============================================================================
+// Custom design tokens
+// Layered on top of Material's --mat-sys-* tokens: spacing/motion/elevation
+// tuned for this app, plus semantic colors Material has no concept of
+// (task priority, Kanban status) that must still read correctly in both themes.
+// =============================================================================
+:root {
+  // --- Spacing (4px base scale) ---
+  --tf-space-1: 0.25rem;
+  --tf-space-2: 0.5rem;
+  --tf-space-3: 0.75rem;
+  --tf-space-4: 1rem;
+  --tf-space-5: 1.5rem;
+  --tf-space-6: 2rem;
+  --tf-space-7: 3rem;
+  --tf-space-8: 4rem;
+
+  // --- Layout ---
+  --tf-sidenav-width: 264px;
+  --tf-sidenav-width-collapsed: 76px;
+  --tf-topbar-height: 64px;
+  --tf-content-max-width: 1400px;
+
+  // --- Motion ---
+  // Standard M3-ish easing curves; durations tuned short so the UI feels
+  // snappy rather than sluggish on frequent interactions (drag, status change).
+  --tf-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --tf-ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  --tf-ease-decel: cubic-bezier(0, 0, 0, 1);
+  --tf-duration-fast: 120ms;
+  --tf-duration-base: 200ms;
+  --tf-duration-slow: 360ms;
+
+  // --- Elevation shadows (tinted with the primary hue instead of flat black —
+  // reads as noticeably more "designed" than default Material shadows) ---
+  --tf-shadow-color: 267deg 45% 12%;
+  --tf-shadow-sm: 0 1px 2px hsl(var(--tf-shadow-color) / 0.08),
+    0 1px 1px hsl(var(--tf-shadow-color) / 0.06);
+  --tf-shadow-md: 0 4px 10px hsl(var(--tf-shadow-color) / 0.10),
+    0 2px 4px hsl(var(--tf-shadow-color) / 0.08);
+  --tf-shadow-lg: 0 12px 28px hsl(var(--tf-shadow-color) / 0.16),
+    0 4px 10px hsl(var(--tf-shadow-color) / 0.10);
+  --tf-shadow-focus: 0 0 0 3px var(--mat-sys-primary);
+
+  // --- Semantic: task priority ---
+  --tf-priority-low: #4a9b6e;
+  --tf-priority-low-bg: color-mix(in srgb, var(--tf-priority-low) 16%, transparent);
+  --tf-priority-medium: #c98a1f;
+  --tf-priority-medium-bg: color-mix(in srgb, var(--tf-priority-medium) 16%, transparent);
+  --tf-priority-high: #d9622b;
+  --tf-priority-high-bg: color-mix(in srgb, var(--tf-priority-high) 16%, transparent);
+  --tf-priority-urgent: #d43d51;
+  --tf-priority-urgent-bg: color-mix(in srgb, var(--tf-priority-urgent) 16%, transparent);
+
+  // --- Semantic: Kanban / task status ---
+  --tf-status-todo: #7a7591;
+  --tf-status-in-progress: #3b7dd8;
+  --tf-status-in-review: #a45fc9;
+  --tf-status-done: #3f9d63;
+
+  // --- Semantic: feedback (toasts) ---
+  --tf-success: var(--tf-status-done);
+}
+
+:root[data-theme='dark'] {
+  --tf-shadow-color: 267deg 60% 2%;
+  --tf-priority-low: #6cc192;
+  --tf-priority-medium: #e0a94a;
+  --tf-priority-high: #ef8a55;
+  --tf-priority-urgent: #f0687a;
+  --tf-status-todo: #9891ad;
+  --tf-status-in-progress: #6ca3ec;
+  --tf-status-in-review: #c188e0;
+  --tf-status-done: #63c187;
+  --tf-success: var(--tf-status-done);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --tf-shadow-color: 267deg 60% 2%;
+    --tf-priority-low: #6cc192;
+    --tf-priority-medium: #e0a94a;
+    --tf-priority-high: #ef8a55;
+    --tf-priority-urgent: #f0687a;
+    --tf-status-todo: #9891ad;
+    --tf-status-in-progress: #6ca3ec;
+    --tf-status-in-review: #c188e0;
+    --tf-status-done: #63c187;
+    --tf-success: var(--tf-status-done);
+  }
+}
+
+// =============================================================================
+// Global element styles
+// =============================================================================
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font-family: var(--mat-sys-body-medium-font, 'Inter', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 700;
+  margin: 0;
+}
+
+// Material Symbols is a variable font — without an explicit axis setting it
+// renders inconsistently thin/thick across browsers. font-family is set
+// explicitly because the Google Fonts css2 endpoint only ships the
+// @font-face rule, not the helper class that maps to it.
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  vertical-align: middle;
+}
+
+// --- Scrollbars (thin, theme-aware) ---
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--mat-sys-outline-variant) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+// --- Accessible focus ring ---
+// Material components already ship their own focus indicators; this covers
+// custom elements (cards, chips, drag handles) built outside Material.
+:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+  border-radius: var(--mat-sys-corner-extra-small);
+}
+
+// --- Reduced motion ---
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  // Router withViewTransitions() uses these pseudo-elements, which the
+  // universal selector above cannot target.
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+// --- Toasts (ToastService / MatSnackBar) ---
+// panelClass content, so these must stay global rather than component-scoped.
+.tf-toast {
+  --mdc-snackbar-container-color: var(--mat-sys-surface-container-high);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-surface);
+  --mat-snack-bar-button-color: var(--mat-sys-primary);
+}
+.tf-toast--error {
+  --mdc-snackbar-container-color: var(--mat-sys-error-container);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-error-container);
+  --mat-snack-bar-button-color: var(--mat-sys-on-error-container);
+}
+.tf-toast--success .mdc-snackbar__surface {
+  border-inline-start: 4px solid var(--tf-success);
+}
+.tf-toast--info .mdc-snackbar__surface {
+  border-inline-start: 4px solid var(--mat-sys-primary);
+}
+
+// --- Small utilities ---
+.tf-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

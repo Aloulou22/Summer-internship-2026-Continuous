@@ -1,0 +1,58 @@
+@if (loading()) {
+  <div class="tf-profile__skeleton">
+    <tf-skeleton height="4rem" width="4rem" radius="var(--mat-sys-corner-full)" />
+    <tf-skeleton height="1.5rem" width="40%" />
+    <tf-skeleton height="1rem" width="60%" />
+  </div>
+} @else if (notFound()) {
+  <tf-empty-state
+    icon="hourglass_top"
+    title="Setting up your profile"
+    message="Your profile is still being created — this usually takes a moment after signing up."
+  >
+    <button mat-stroked-button type="button" (click)="retry()">Try again</button>
+  </tf-empty-state>
+} @else if (profile()) {
+  @if (profile(); as profile) {
+  <div class="tf-profile">
+    <header class="tf-profile__header">
+      <tf-avatar [name]="profile.fullName" [imageUrl]="profile.avatarUrl" size="72px" />
+      <div class="tf-profile__identity">
+        <h1>{{ profile.fullName }}</h1>
+        <p class="tf-profile__email">{{ auth.user()?.email }}</p>
+        <div class="tf-profile__badges">
+          <span class="tf-profile__role-badge">{{ auth.user()?.role }}</span>
+          @if (profile.team) {
+            <span class="tf-profile__team-badge">
+              <mat-icon>groups</mat-icon>
+              {{ profile.team.name }}
+            </span>
+          }
+        </div>
+      </div>
+      <button mat-stroked-button type="button" (click)="editProfile()">
+        <mat-icon>edit</mat-icon>
+        Edit profile
+      </button>
+    </header>
+
+    <section class="tf-detail-card">
+      <h2>Job title</h2>
+      @if (profile.jobTitle) {
+        <p>{{ profile.jobTitle }}</p>
+      } @else {
+        <p class="tf-profile__muted">Not set.</p>
+      }
+    </section>
+
+    <section class="tf-detail-card">
+      <h2>Bio</h2>
+      @if (profile.bio) {
+        <p class="tf-profile__bio">{{ profile.bio }}</p>
+      } @else {
+        <p class="tf-profile__muted">Not set.</p>
+      }
+    </section>
+  </div>
+  }
+}

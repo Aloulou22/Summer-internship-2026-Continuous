@@ -1,4 +1,44 @@
 services:
+  # ==================== KAFKA (KRaft mode, no ZooKeeper) ====================
+  kafka:
+    image: bitnamilegacy/kafka:3.7
+    container_name: taskflow-kafka
+    ports:
+      - '9092:9092'
+    environment:
+      # KRaft: this single node is both broker and controller
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      ALLOW_PLAINTEXT_LISTENER: 'yes'
+    volumes:
+      - kafka-data:/bitnami/kafka
+    healthcheck:
+      test: ['CMD-SHELL', 'kafka-topics.sh --bootstrap-server localhost:9092 --list']
+      interval: 15s
+      timeout: 50s
+      retries: 15
+      start_period: 120s
+
+  # ==================== REDIS (shared dashboard/list cache) ====================
+  redis:
+    image: redis:7-alpine
+    container_name: taskflow-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # ==================== AUTH SERVICE ====================
   auth-db:
     image: postgres:16-alpine
@@ -20,8 +60,11 @@ services:
   auth-service:
     build: ./services/auth-service
     container_name: taskflow-auth-service
+    restart: on-failure
     depends_on:
       auth-db:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     environment:
       PORT: 3001
@@ -33,6 +76,9 @@ services:
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_ACCESS_TTL: 15m
       REFRESH_TTL_DAYS: 7
+      KAFKA_BROKER: kafka:9092
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     ports:
       - '3001:3001'
 
@@ -57,8 +103,11 @@ services:
   user-service:
     build: ./services/user-service
     container_name: taskflow-user-service
+    restart: on-failure
     depends_on:
       user-db:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     environment:
       PORT: 3002
@@ -67,11 +116,161 @@ services:
       DB_USER: user_user
       DB_PASSWORD: user_pass
       DB_NAME: user_db
-      # SAME secret as auth-service so JWTs verify across services
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      KAFKA_BROKER: kafka:9092
     ports:
       - '3002:3002'
+
+  # ==================== PROJECT SERVICE ====================
+  project-db:
+    image: postgres:16-alpine
+    container_name: taskflow-project-db
+    environment:
+      POSTGRES_USER: project_user
+      POSTGRES_PASSWORD: project_pass
+      POSTGRES_DB: project_db
+    ports:
+      - '5435:5432'
+    volumes:
+      - project-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U project_user -d project_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  project-service:
+    build: ./services/project-service
+    container_name: taskflow-project-service
+    restart: on-failure
+    depends_on:
+      project-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 3003
+      DB_HOST: project-db
+      DB_PORT: 5432
+      DB_USER: project_user
+      DB_PASSWORD: project_pass
+      DB_NAME: project_db
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3003:3003'
+
+  # ==================== TASK SERVICE ====================
+  task-db:
+    image: postgres:16-alpine
+    container_name: taskflow-task-db
+    environment:
+      POSTGRES_USER: task_user
+      POSTGRES_PASSWORD: task_pass
+      POSTGRES_DB: task_db
+    ports:
+      - '5436:5432'
+    volumes:
+      - task-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U task_user -d task_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  task-service:
+    build: ./services/task-service
+    container_name: taskflow-task-service
+    restart: on-failure
+    depends_on:
+      task-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      PORT: 3004
+      DB_HOST: task-db
+      DB_PORT: 5432
+      DB_USER: task_user
+      DB_PASSWORD: task_pass
+      DB_NAME: task_db
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      KAFKA_BROKER: kafka:9092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PROJECT_SERVICE_URL: http://project-service:3003
+    ports:
+      - '3004:3004'
+
+  # ==================== NOTIFICATION SERVICE ====================
+  notification-db:
+    image: postgres:16-alpine
+    container_name: taskflow-notification-db
+    environment:
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_pass
+      POSTGRES_DB: notification_db
+    ports:
+      - '5437:5432'
+    volumes:
+      - notification-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U notification_user -d notification_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: taskflow-notification-service
+    restart: on-failure
+    depends_on:
+      notification-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      PORT: 3005
+      DB_HOST: notification-db
+      DB_PORT: 5432
+      DB_USER: notification_user
+      DB_PASSWORD: notification_pass
+      DB_NAME: notification_db
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      KAFKA_BROKER: kafka:9092
+    ports:
+      - '3005:3005'
+
+  # ==================== API GATEWAY ====================
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: taskflow-api-gateway
+    restart: on-failure
+    depends_on:
+      - auth-service
+      - user-service
+      - project-service
+      - task-service
+      - notification-service
+    environment:
+      PORT: 3000
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      AUTH_SERVICE_URL: http://auth-service:3001
+      USER_SERVICE_URL: http://user-service:3002
+      PROJECT_SERVICE_URL: http://project-service:3003
+      TASK_SERVICE_URL: http://task-service:3004
+      NOTIFICATION_SERVICE_URL: http://notification-service:3005
+    ports:
+      - '3000:3000'
 
 volumes:
   auth-db-data:
   user-db-data:
+  project-db-data:
+  task-db-data:
+  notification-db-data:
+  kafka-data:
+  redis-data:

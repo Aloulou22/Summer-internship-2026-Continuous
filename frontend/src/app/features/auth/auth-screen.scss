@@ -1,0 +1,61 @@
+// Shared layout for the login/register screens.
+.tf-auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mat-sys-surface-container-low);
+  padding: var(--tf-space-5);
+}
+
+.tf-auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-5);
+  padding: var(--tf-space-6);
+  max-width: 400px;
+  width: 100%;
+}
+
+.tf-auth-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+}
+
+.tf-auth-card__subtitle {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.tf-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-1);
+}
+
+.tf-auth-submit {
+  margin-top: var(--tf-space-2);
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--tf-space-2);
+}
+
+.tf-auth-card__footer {
+  margin: 0;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+
+  a {
+    color: var(--mat-sys-primary);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

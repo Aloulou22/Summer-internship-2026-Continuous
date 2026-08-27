@@ -1,0 +1,314 @@
+.tf-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-6);
+  padding-bottom: var(--tf-space-6);
+}
+
+.tf-dashboard__header h1 {
+  font-size: 1.75rem;
+}
+.tf-dashboard__subtitle {
+  margin: var(--tf-space-1) 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// --- Stats ---------------------------------------------------------------
+.tf-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--tf-space-4);
+}
+
+.tf-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-1);
+  padding: var(--tf-space-4) var(--tf-space-5);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  transition: border-color var(--tf-duration-fast) var(--tf-ease-standard);
+
+  &--warn {
+    border-color: color-mix(in srgb, var(--tf-priority-medium) 50%, var(--mat-sys-outline-variant));
+    .tf-stat-card__value {
+      color: var(--tf-priority-medium);
+    }
+  }
+  &--danger {
+    border-color: color-mix(in srgb, var(--mat-sys-error) 50%, var(--mat-sys-outline-variant));
+    .tf-stat-card__value {
+      color: var(--mat-sys-error);
+    }
+  }
+}
+
+.tf-stat-card__value {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.tf-stat-card__label {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// --- Panel grid ------------------------------------------------------------
+.tf-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--tf-space-4);
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tf-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-3);
+  padding: var(--tf-space-5);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  min-height: 220px;
+}
+
+.tf-panel__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.tf-panel__link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tf-panel__skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+}
+
+// --- Deadline pill (shared look for task + project deadlines) -----------
+.tf-deadline-pill {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+
+  &--soon {
+    color: var(--tf-priority-medium);
+  }
+  &--overdue {
+    color: var(--mat-sys-error);
+  }
+}
+
+// --- Task list (Assigned to you) ------------------------------------------
+.tf-task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+}
+
+.tf-task-list__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tf-space-3);
+  padding: var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--tf-duration-fast) var(--tf-ease-standard);
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.tf-task-list__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tf-task-list__title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-task-list__project {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+.tf-task-list__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-3);
+  flex-shrink: 0;
+}
+
+// --- Deadline list (Upcoming deadlines) ------------------------------------
+.tf-deadline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-1);
+}
+.tf-deadline-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-3);
+  padding: var(--tf-space-2) var(--tf-space-1);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+.tf-deadline-list__icon {
+  color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
+}
+.tf-deadline-list__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.tf-deadline-list__title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-deadline-list__subtitle {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// --- Project cards -----------------------------------------------------------
+.tf-project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+}
+.tf-project-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tf-space-3);
+  padding: var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container);
+}
+.tf-project-card__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tf-project-card__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-project-card__category {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-1);
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+.tf-project-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.tf-project-card__status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// --- Activity feed -----------------------------------------------------------
+.tf-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-3);
+}
+.tf-activity-list__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tf-space-2);
+}
+.tf-activity-list__icon {
+  color: var(--mat-sys-primary);
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.tf-activity-list__text {
+  margin: 0;
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+  line-height: 1.4;
+}
+.tf-activity-list__title {
+  font-weight: 600;
+  color: var(--mat-sys-on-surface);
+}
+.tf-activity-list__time {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+  flex-shrink: 0;
+  white-space: nowrap;
+}

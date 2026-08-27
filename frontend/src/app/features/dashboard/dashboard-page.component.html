@@ -1,0 +1,198 @@
+<div class="tf-dashboard">
+  <header class="tf-dashboard__header">
+    <h1>Welcome back, {{ firstName() }}</h1>
+    <p class="tf-dashboard__subtitle">Here's what's happening across your projects.</p>
+  </header>
+
+  <section class="tf-stats" aria-label="Overview">
+    @if (loading()) {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="tf-stat-card">
+          <tf-skeleton height="2rem" width="3rem" />
+          <tf-skeleton height="0.8125rem" width="70%" />
+        </div>
+      }
+    } @else {
+      <div class="tf-stat-card">
+        <span class="tf-stat-card__value">{{ stats().projectCount }}</span>
+        <span class="tf-stat-card__label">Projects</span>
+      </div>
+      <div class="tf-stat-card">
+        <span class="tf-stat-card__value">{{ stats().assignedCount }}</span>
+        <span class="tf-stat-card__label">Assigned to you</span>
+      </div>
+      <div class="tf-stat-card" [class.tf-stat-card--warn]="stats().dueSoonCount > 0">
+        <span class="tf-stat-card__value">{{ stats().dueSoonCount }}</span>
+        <span class="tf-stat-card__label">Due soon</span>
+      </div>
+      <div class="tf-stat-card" [class.tf-stat-card--danger]="stats().overdueCount > 0">
+        <span class="tf-stat-card__value">{{ stats().overdueCount }}</span>
+        <span class="tf-stat-card__label">Overdue</span>
+      </div>
+    }
+  </section>
+
+  <div class="tf-dashboard__grid">
+    <!-- Assigned to you -->
+    <section class="tf-panel" aria-labelledby="my-tasks-heading">
+      <div class="tf-panel__header">
+        <h2 id="my-tasks-heading">Assigned to you</h2>
+      </div>
+
+      @if (loading()) {
+        <div class="tf-panel__skeletons">
+          @for (i of [1, 2, 3]; track i) {
+            <tf-skeleton height="3.25rem" radius="var(--mat-sys-corner-medium)" />
+          }
+        </div>
+      } @else if (myTasksPreview().length === 0) {
+        <tf-empty-state
+          icon="task_alt"
+          title="No tasks assigned to you"
+          message="Tasks assigned to you across all your projects show up here."
+        />
+      } @else {
+        <ul class="tf-task-list">
+          @for (task of myTasksPreview(); track task.id) {
+            <li class="tf-task-list__item">
+              <a
+                class="tf-task-list__link"
+                [routerLink]="['/projects', task.projectId, 'tasks', task.id]"
+              >
+              <div class="tf-task-list__main">
+                <span class="tf-task-list__title">{{ task.title }}</span>
+                <span class="tf-task-list__project">{{ projectsById().get(task.projectId)?.name }}</span>
+              </div>
+              <div class="tf-task-list__meta">
+                <tf-priority-chip [priority]="task.priority" />
+                <tf-status-chip [status]="task.status" />
+                @if (task.deadline) {
+                  <span
+                    class="tf-deadline-pill"
+                    [class.tf-deadline-pill--overdue]="relDeadline(task.deadline).overdue"
+                    [class.tf-deadline-pill--soon]="relDeadline(task.deadline).dueSoon"
+                  >
+                    {{ relDeadline(task.deadline).text }}
+                  </span>
+                }
+              </div>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Upcoming deadlines -->
+    <section class="tf-panel" aria-labelledby="deadlines-heading">
+      <div class="tf-panel__header">
+        <h2 id="deadlines-heading">Upcoming deadlines</h2>
+      </div>
+
+      @if (loading()) {
+        <div class="tf-panel__skeletons">
+          @for (i of [1, 2, 3]; track i) {
+            <tf-skeleton height="2.75rem" radius="var(--mat-sys-corner-medium)" />
+          }
+        </div>
+      } @else if (upcomingDeadlines().length === 0) {
+        <tf-empty-state
+          icon="event_available"
+          title="Nothing due soon"
+          message="Project and task deadlines will show up here as they approach."
+        />
+      } @else {
+        <ul class="tf-deadline-list">
+          @for (item of upcomingDeadlines(); track item.id) {
+            <li class="tf-deadline-list__item">
+              <mat-icon class="tf-deadline-list__icon">{{ item.kind === 'task' ? 'task' : 'folder' }}</mat-icon>
+              <div class="tf-deadline-list__main">
+                <span class="tf-deadline-list__title">{{ item.title }}</span>
+                <span class="tf-deadline-list__subtitle">{{ item.subtitle }}</span>
+              </div>
+              <span
+                class="tf-deadline-pill"
+                [class.tf-deadline-pill--overdue]="relDeadline(item.deadline).overdue"
+                [class.tf-deadline-pill--soon]="relDeadline(item.deadline).dueSoon"
+              >
+                {{ relDeadline(item.deadline).text }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Your projects -->
+    <section class="tf-panel" aria-labelledby="projects-heading">
+      <div class="tf-panel__header">
+        <h2 id="projects-heading">Your projects</h2>
+        <a routerLink="/projects" class="tf-panel__link">View all</a>
+      </div>
+
+      @if (loading()) {
+        <div class="tf-panel__skeletons">
+          @for (i of [1, 2]; track i) {
+            <tf-skeleton height="4rem" radius="var(--mat-sys-corner-medium)" />
+          }
+        </div>
+      } @else if (projectsPreview().length === 0) {
+        <tf-empty-state
+          icon="folder_open"
+          title="No projects yet"
+          message="Projects you own or are a member of will show up here."
+        />
+      } @else {
+        <ul class="tf-project-list">
+          @for (project of projectsPreview(); track project.id) {
+            <li class="tf-project-card">
+              <div class="tf-project-card__main">
+                <span class="tf-project-card__name">{{ project.name }}</span>
+                @if (project.category; as category) {
+                  <span class="tf-project-card__category">
+                    <span class="tf-project-card__dot" [style.background]="category.color || 'var(--mat-sys-primary)'"></span>
+                    {{ category.name }}
+                  </span>
+                }
+              </div>
+              <span class="tf-project-card__status">
+                <mat-icon>{{ projectStatusMeta[project.status].icon }}</mat-icon>
+                {{ projectStatusMeta[project.status].label }}
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <!-- Recent activity -->
+    <section class="tf-panel" aria-labelledby="activity-heading">
+      <div class="tf-panel__header">
+        <h2 id="activity-heading">Recent activity</h2>
+      </div>
+
+      @if (loading()) {
+        <div class="tf-panel__skeletons">
+          @for (i of [1, 2, 3]; track i) {
+            <tf-skeleton height="2.25rem" />
+          }
+        </div>
+      } @else if (recentActivity().length === 0) {
+        <tf-empty-state icon="history" title="No activity yet" message="Task updates across your projects show up here." />
+      } @else {
+        <ul class="tf-activity-list">
+          @for (item of recentActivity(); track item.id) {
+            <li class="tf-activity-list__item">
+              <mat-icon class="tf-activity-list__icon">{{ item.verb === 'created' ? 'add_circle' : 'edit' }}</mat-icon>
+              <p class="tf-activity-list__text">
+                <span class="tf-activity-list__title">{{ item.title }}</span>
+                was {{ item.verb }} in {{ item.projectName }}
+              </p>
+              <span class="tf-activity-list__time">{{ item.time }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</div>

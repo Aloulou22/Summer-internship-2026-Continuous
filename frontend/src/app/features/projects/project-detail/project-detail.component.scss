@@ -1,0 +1,201 @@
+.tf-project-detail__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-3);
+  max-width: 700px;
+}
+
+.tf-project-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-3);
+}
+
+.tf-project-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--mat-sys-primary);
+  }
+}
+
+.tf-project-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--tf-space-3);
+}
+
+.tf-project-detail__title {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-3);
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 1.75rem;
+  }
+}
+
+.tf-project-detail__status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: var(--tf-space-1) var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-surface-container);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.tf-project-detail__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  margin-inline-end: 2px;
+}
+
+.tf-project-detail__overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--tf-space-4);
+  padding-block: var(--tf-space-4);
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tf-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-4);
+  padding: var(--tf-space-4);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.tf-detail-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tf-space-2);
+
+  h2 {
+    font-size: 1rem;
+  }
+}
+
+.tf-detail-card__description {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  line-height: 1.5;
+
+  &--muted {
+    color: var(--mat-sys-on-surface-variant);
+    font-style: italic;
+  }
+}
+
+.tf-detail-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+  margin: 0;
+}
+.tf-detail-facts__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tf-space-3);
+  font-size: 0.875rem;
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+  dd {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+  }
+}
+.tf-detail-facts__value--soon {
+  color: var(--tf-priority-medium);
+}
+.tf-detail-facts__value--overdue {
+  color: var(--mat-sys-error);
+}
+
+// --- Members --------------------------------------------------------------
+.tf-member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+}
+.tf-member-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-3);
+}
+.tf-member-list__main {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-2);
+  flex: 1;
+  min-width: 0;
+}
+.tf-member-list__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tf-member-list__you {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  flex-shrink: 0;
+}
+.tf-member-list__role {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+  text-transform: capitalize;
+}
+.tf-member-list__role-select {
+  font: inherit;
+  font-size: 0.8125rem;
+  padding: 4px var(--tf-space-2);
+  border-radius: var(--mat-sys-corner-small);
+  border: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}

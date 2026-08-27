@@ -1,0 +1,233 @@
+.tf-shell {
+  height: 100vh;
+}
+
+// --- Sidenav -----------------------------------------------------------------
+.tf-shell__nav {
+  width: var(--tf-sidenav-width);
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface-container-low);
+  display: flex;
+  flex-direction: column;
+  transition: width var(--tf-duration-base) var(--tf-ease-standard);
+  overflow-x: hidden;
+
+  &--collapsed {
+    width: var(--tf-sidenav-width-collapsed);
+  }
+}
+
+.tf-shell__nav-header {
+  display: flex;
+  align-items: center;
+  height: var(--tf-topbar-height);
+  padding-inline: var(--tf-space-4);
+  flex-shrink: 0;
+}
+
+.tf-shell__nav-list {
+  padding-top: var(--tf-space-2);
+
+  a {
+    border-radius: var(--mat-sys-corner-full);
+    margin-inline: var(--tf-space-2);
+    margin-block-end: var(--tf-space-1);
+    transition:
+      background-color var(--tf-duration-fast) var(--tf-ease-standard),
+      color var(--tf-duration-fast) var(--tf-ease-standard);
+  }
+}
+
+::ng-deep .tf-nav-item--active {
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+
+  .mat-icon {
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+// --- Body / topbar -------------------------------------------------------------
+.tf-shell__body {
+  display: flex;
+  flex-direction: column;
+}
+
+.tf-shell__topbar {
+  height: var(--tf-topbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-2);
+  background: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tf-shell__search {
+  width: 100%;
+  max-width: 380px;
+  margin-inline-start: var(--tf-space-2);
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    height: 40px;
+  }
+  ::ng-deep .mat-mdc-form-field-infix {
+    min-height: 0;
+    padding-block: 8px;
+  }
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+}
+
+.tf-shell__spacer {
+  flex: 1 1 auto;
+}
+
+.tf-check {
+  margin-inline-start: auto;
+  color: var(--mat-sys-primary);
+}
+
+.tf-empty-menu {
+  padding: var(--tf-space-4) var(--tf-space-5);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.tf-shell__avatar-trigger {
+  padding: 0;
+}
+
+// --- Notifications panel ---------------------------------------------------
+// panelClass targets Material's own overlay wrapper, which isn't part of
+// this component's compiled view, so it needs ::ng-deep to be reachable.
+::ng-deep .tf-notif-menu {
+  max-width: 380px !important;
+  min-width: 340px !important;
+}
+
+.tf-notif-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--tf-space-2) var(--tf-space-4);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.tf-notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.tf-notif-list__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tf-space-2);
+  padding: var(--tf-space-3) var(--tf-space-4);
+  cursor: pointer;
+  transition: background-color var(--tf-duration-fast) var(--tf-ease-standard);
+  position: relative;
+
+  &:hover {
+    background: var(--mat-sys-surface-container-high);
+  }
+
+  &--unread {
+    background: var(--mat-sys-secondary-container);
+
+    &:hover {
+      background: var(--mat-sys-secondary-container);
+      filter: brightness(0.97);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: -2px;
+  }
+}
+
+.tf-notif-list__icon {
+  color: var(--mat-sys-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tf-notif-list__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.tf-notif-list__title {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.tf-notif-list__message {
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.tf-notif-list__time {
+  font-size: 0.75rem;
+  color: var(--mat-sys-on-surface-variant);
+  margin-top: 2px;
+}
+.tf-notif-list__remove {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.tf-user-summary {
+  display: flex;
+  flex-direction: column;
+  padding: var(--tf-space-3) var(--tf-space-5);
+  min-width: 200px;
+
+  &__name {
+    font-weight: 600;
+    color: var(--mat-sys-on-surface);
+  }
+
+  &__email {
+    font-size: 0.8125rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// --- Content -------------------------------------------------------------------
+.tf-shell__content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: var(--mat-sys-surface);
+}
+
+.tf-shell__inner {
+  max-width: var(--tf-content-max-width);
+  margin-inline: auto;
+  padding: var(--tf-space-5);
+
+  @media (max-width: 640px) {
+    padding: var(--tf-space-4);
+  }
+}

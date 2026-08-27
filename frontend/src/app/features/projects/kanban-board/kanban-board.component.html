@@ -1,0 +1,113 @@
+@if (loading()) {
+  <div class="tf-kanban">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="tf-kanban-column">
+        <tf-skeleton height="1.25rem" width="60%" />
+        <tf-skeleton height="4rem" radius="var(--mat-sys-corner-medium)" />
+        <tf-skeleton height="4rem" radius="var(--mat-sys-corner-medium)" />
+      </div>
+    }
+  </div>
+} @else {
+  <div class="tf-kanban">
+    @for (col of columns; track col.status) {
+      <div class="tf-kanban-column">
+        <div class="tf-kanban-column__header" [style.--col-color]="'var(' + col.colorVar + ')'">
+          <span class="tf-kanban-column__dot"></span>
+          <span class="tf-kanban-column__label">{{ col.label }}</span>
+          <span class="tf-kanban-column__count">{{ tasksByStatus()[col.status].length }}</span>
+          <button
+            mat-icon-button
+            type="button"
+            (click)="startAdding(col.status)"
+            [attr.aria-label]="'Add task to ' + col.label"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div
+          class="tf-kanban-column__list"
+          cdkDropList
+          [id]="col.listId"
+          [cdkDropListData]="tasksByStatus()[col.status]"
+          [cdkDropListConnectedTo]="allListIds"
+          (cdkDropListDropped)="drop($event, col.status)"
+        >
+          @if (addingTo() === col.status) {
+            <div class="tf-kanban-add">
+              <input
+                class="tf-kanban-add__input"
+                type="text"
+                placeholder="Task title…"
+                [attr.aria-label]="'New task title for ' + col.label"
+                [(ngModel)]="newTaskTitle"
+                (keydown.enter)="confirmAdd(col.status)"
+                (keydown.escape)="cancelAdding()"
+                (blur)="confirmAdd(col.status)"
+                autofocus
+              />
+            </div>
+          }
+
+          @for (task of tasksByStatus()[col.status]; track task.id) {
+            <div
+              class="tf-kanban-card"
+              cdkDrag
+              [cdkDragData]="task"
+              (click)="openTask(task)"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="'Open task ' + task.title"
+              (keydown.enter)="openTask(task)"
+            >
+              <div class="tf-kanban-card__drag-preview" *cdkDragPreview>
+                {{ task.title }}
+              </div>
+
+              <div class="tf-kanban-card__top">
+                <span class="tf-kanban-card__title">{{ task.title }}</span>
+                <button
+                  mat-icon-button
+                  type="button"
+                  class="tf-kanban-card__menu-trigger"
+                  [matMenuTriggerFor]="cardMenu"
+                  (click)="$event.stopPropagation()"
+                  aria-label="Task actions"
+                >
+                  <mat-icon>more_horiz</mat-icon>
+                </button>
+                <mat-menu #cardMenu="matMenu">
+                  <button mat-menu-item type="button" (click)="deleteTask(task)">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                  </button>
+                </mat-menu>
+              </div>
+
+              <div class="tf-kanban-card__meta">
+                <tf-priority-chip [priority]="task.priority" />
+                @if (task.deadline) {
+                  <span
+                    class="tf-kanban-card__deadline"
+                    [class.tf-kanban-card__deadline--overdue]="relDeadline(task.deadline).overdue"
+                    [class.tf-kanban-card__deadline--soon]="relDeadline(task.deadline).dueSoon"
+                  >
+                    {{ relDeadline(task.deadline).text }}
+                  </span>
+                }
+                @if (task.assigneeId) {
+                  <tf-avatar
+                    class="tf-kanban-card__assignee"
+                    [name]="directory.displayName(task.assigneeId)"
+                    size="22px"
+                  />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}

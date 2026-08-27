@@ -1,0 +1,78 @@
+.tf-teams {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-5);
+}
+
+.tf-teams__header h1 {
+  font-size: 1.75rem;
+}
+.tf-teams__subtitle {
+  margin: var(--tf-space-1) 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.tf-teams__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--tf-space-4);
+}
+
+.tf-team-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-3);
+  padding: var(--tf-space-4);
+  border-radius: var(--mat-sys-corner-large);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+}
+
+.tf-team-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--tf-space-2);
+
+  h2 {
+    font-size: 1.0625rem;
+  }
+}
+.tf-team-card__count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container);
+  border-radius: var(--mat-sys-corner-full);
+  padding: 1px 8px;
+}
+
+.tf-team-card__description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.tf-team-card__empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--mat-sys-on-surface-variant);
+  font-style: italic;
+}
+
+.tf-team-card__members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+
+  li {
+    margin-inline-start: -8px;
+    border-radius: 999px;
+    border: 2px solid var(--mat-sys-surface-container-low);
+
+    &:first-child {
+      margin-inline-start: 0;
+    }
+  }
+}

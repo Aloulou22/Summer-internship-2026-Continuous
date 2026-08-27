@@ -1,0 +1,211 @@
+@if (loading()) {
+  <div class="tf-task-detail__skeleton">
+    <tf-skeleton height="1.75rem" width="50%" />
+    <tf-skeleton height="1rem" width="30%" />
+    <tf-skeleton height="10rem" radius="var(--mat-sys-corner-large)" />
+  </div>
+} @else if (notFound()) {
+  <tf-placeholder-page
+    icon="search_off"
+    title="Task not found"
+    note="It may have been deleted, or you don't have access to it."
+  />
+} @else {
+  @if (task(); as task) {
+    <div class="tf-task-detail">
+      <a [routerLink]="['/projects', projectId]" class="tf-task-detail__back">
+        <mat-icon>arrow_back</mat-icon>
+        Back to board
+      </a>
+
+      <header class="tf-task-detail__header">
+        <h1>{{ task.title }}</h1>
+        <div class="tf-task-detail__header-actions">
+          <button mat-icon-button type="button" [matMenuTriggerFor]="taskMenu" aria-label="Task actions">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #taskMenu="matMenu">
+            <button mat-menu-item type="button" (click)="editTask()">
+              <mat-icon>edit</mat-icon>
+              <span>Edit task</span>
+            </button>
+            <button mat-menu-item type="button" (click)="deleteTask()">
+              <mat-icon>delete</mat-icon>
+              <span>Delete task</span>
+            </button>
+          </mat-menu>
+        </div>
+      </header>
+
+      <div class="tf-task-detail__grid">
+        <div class="tf-task-detail__main">
+          <section class="tf-detail-card">
+            <h2>Description</h2>
+            @if (task.description) {
+              <p class="tf-task-detail__description">{{ task.description }}</p>
+            } @else {
+              <p class="tf-task-detail__description tf-task-detail__description--muted">
+                No description yet.
+              </p>
+            }
+          </section>
+
+          <section class="tf-detail-card">
+            <div class="tf-detail-card__header">
+              <h2>Subtasks @if (subtaskProgress().total) {<span class="tf-task-detail__progress">({{ subtaskProgress().done }}/{{ subtaskProgress().total }})</span>}</h2>
+            </div>
+
+            @if (task.subtasks.length === 0) {
+              <tf-empty-state icon="checklist" title="No subtasks yet" message="Break this task down into smaller steps." />
+            } @else {
+              <ul class="tf-subtask-list">
+                @for (subtask of task.subtasks; track subtask.id) {
+                  <li class="tf-subtask-list__item">
+                    <mat-checkbox
+                      [checked]="subtask.done"
+                      (change)="toggleSubtask(subtask.id, $event.checked)"
+                    >
+                      <span [class.tf-subtask-list__title--done]="subtask.done">{{ subtask.title }}</span>
+                    </mat-checkbox>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="removeSubtask(subtask.id)"
+                      aria-label="Remove subtask"
+                    >
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+
+            <div class="tf-inline-add">
+              <input
+                type="text"
+                placeholder="Add a subtask…"
+                aria-label="New subtask title"
+                [(ngModel)]="newSubtaskTitle"
+                (keydown.enter)="addSubtask()"
+              />
+              <button mat-button type="button" (click)="addSubtask()">Add</button>
+            </div>
+          </section>
+
+          <section class="tf-detail-card">
+            <h2>Comments</h2>
+
+            @if (task.comments.length === 0) {
+              <tf-empty-state icon="chat_bubble_outline" title="No comments yet" message="Start the conversation." />
+            } @else {
+              <ul class="tf-comment-list">
+                @for (comment of task.comments; track comment.id) {
+                  <li class="tf-comment-list__item">
+                    <tf-avatar [name]="directory.displayName(comment.authorId)" size="32px" />
+                    <div class="tf-comment-list__body">
+                      <div class="tf-comment-list__meta">
+                        <span class="tf-comment-list__author">{{ directory.displayName(comment.authorId) }}</span>
+                        <span class="tf-comment-list__time">{{ commentTime(comment.createdAt) }}</span>
+                      </div>
+                      <p class="tf-comment-list__content">{{ comment.content }}</p>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+
+            <div class="tf-inline-add tf-inline-add--comment">
+              <textarea
+                rows="2"
+                placeholder="Write a comment…"
+                aria-label="Write a comment"
+                [(ngModel)]="newComment"
+                (keydown.enter)="$event.preventDefault(); addComment()"
+              ></textarea>
+              <button mat-flat-button color="primary" type="button" (click)="addComment()">Comment</button>
+            </div>
+          </section>
+        </div>
+
+        <aside class="tf-task-detail__sidebar">
+          <section class="tf-detail-card">
+            <h2>Details</h2>
+            <dl class="tf-detail-facts">
+              <div class="tf-detail-facts__row tf-detail-facts__row--block">
+                <dt>Status</dt>
+                <dd>
+                  <button mat-stroked-button type="button" [matMenuTriggerFor]="statusMenu">
+                    <tf-status-chip [status]="task.status" />
+                    <mat-icon iconPositionEnd>arrow_drop_down</mat-icon>
+                  </button>
+                  <mat-menu #statusMenu="matMenu">
+                    @for (status of statusOrder; track status) {
+                      <button mat-menu-item type="button" (click)="changeStatus(status)">
+                        <tf-status-chip [status]="status" />
+                      </button>
+                    }
+                  </mat-menu>
+                </dd>
+              </div>
+
+              <div class="tf-detail-facts__row tf-detail-facts__row--block">
+                <dt>Priority</dt>
+                <dd><tf-priority-chip [priority]="task.priority" /></dd>
+              </div>
+
+              <div class="tf-detail-facts__row tf-detail-facts__row--block">
+                <dt>Assignee</dt>
+                <dd>
+                  <button mat-button type="button" class="tf-assignee-button" (click)="changeAssignee()">
+                    @if (task.assigneeId) {
+                      <tf-avatar [name]="directory.displayName(task.assigneeId)" size="24px" />
+                    } @else {
+                      <mat-icon>person_add</mat-icon>
+                    }
+                    {{ task.assigneeId ? directory.displayName(task.assigneeId) : 'Assign' }}
+                  </button>
+                </dd>
+              </div>
+
+              <div class="tf-detail-facts__row">
+                <dt>Reporter</dt>
+                <dd>{{ directory.displayName(task.reporterId) }}</dd>
+              </div>
+
+              @if (task.deadline) {
+                <div class="tf-detail-facts__row">
+                  <dt>Deadline</dt>
+                  <dd
+                    [class.tf-detail-facts__value--overdue]="relDeadline(task.deadline).overdue"
+                    [class.tf-detail-facts__value--soon]="relDeadline(task.deadline).dueSoon"
+                  >
+                    {{ relDeadline(task.deadline).text }}
+                  </dd>
+                </div>
+              }
+            </dl>
+          </section>
+
+          <section class="tf-detail-card">
+            <h2>History</h2>
+            @if (sortedHistory().length === 0) {
+              <p class="tf-task-detail__description--muted">No changes recorded yet.</p>
+            } @else {
+              <ul class="tf-history-list">
+                @for (entry of sortedHistory(); track entry.id) {
+                  <li class="tf-history-list__item">
+                    <mat-icon>history</mat-icon>
+                    <div>
+                      <p>{{ historyText(entry) }}</p>
+                      <span class="tf-history-list__time">{{ historyTime(entry.createdAt) }}</span>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        </aside>
+      </div>
+    </div>
+  }
+}

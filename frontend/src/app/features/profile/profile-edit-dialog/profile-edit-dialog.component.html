@@ -1,0 +1,35 @@
+<h2 mat-dialog-title>Edit profile</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content class="tf-form-content">
+    <mat-form-field appearance="outline">
+      <mat-label>Full name</mat-label>
+      <input matInput formControlName="fullName" required autocomplete="name" />
+      @if (form.controls.fullName.hasError('required')) {
+        <mat-error>Full name is required</mat-error>
+      } @else if (form.controls.fullName.hasError('minlength')) {
+        <mat-error>Full name must be at least 2 characters</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Job title</mat-label>
+      <input matInput formControlName="jobTitle" autocomplete="organization-title" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Bio</mat-label>
+      <textarea matInput formControlName="bio" rows="3"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Avatar URL</mat-label>
+      <input matInput formControlName="avatarUrl" autocomplete="off" placeholder="https://…" />
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" [mat-dialog-close]="undefined">Cancel</button>
+    <button mat-flat-button color="primary" type="submit">Save changes</button>
+  </mat-dialog-actions>
+</form>

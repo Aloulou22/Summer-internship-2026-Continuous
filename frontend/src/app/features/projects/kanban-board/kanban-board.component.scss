@@ -1,0 +1,178 @@
+.tf-kanban {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tf-space-4);
+  overflow-x: auto;
+  padding-block: var(--tf-space-2) var(--tf-space-5);
+  min-height: 60vh;
+}
+
+.tf-kanban-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+  flex: 0 0 280px;
+  width: 280px;
+}
+
+.tf-kanban-column__header {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-2);
+  padding: var(--tf-space-1) var(--tf-space-2);
+}
+.tf-kanban-column__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--col-color);
+  flex-shrink: 0;
+}
+.tf-kanban-column__label {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+.tf-kanban-column__count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-container);
+  border-radius: var(--mat-sys-corner-full);
+  padding: 1px 7px;
+}
+.tf-kanban-column__header button {
+  margin-inline-start: auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.tf-kanban-column__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+  min-height: 80px;
+  padding: var(--tf-space-1);
+  border-radius: var(--mat-sys-corner-large);
+  transition: background-color var(--tf-duration-fast) var(--tf-ease-standard);
+}
+
+// --- Drag states (CDK classes) ---
+.cdk-drop-list-dragging .tf-kanban-card:not(.cdk-drag-placeholder) {
+  transition: transform var(--tf-duration-base) var(--tf-ease-standard);
+}
+.tf-kanban-column__list.cdk-drop-list-receiving {
+  background: var(--mat-sys-secondary-container);
+}
+::ng-deep .cdk-drag-placeholder {
+  opacity: 0.3;
+}
+::ng-deep .cdk-drag-preview {
+  box-shadow: var(--tf-shadow-lg);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+.tf-kanban-card__drag-preview {
+  padding: var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-highest);
+  font-weight: 600;
+  max-width: 260px;
+}
+
+// --- Task card --------------------------------------------------------------
+.tf-kanban-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-2);
+  padding: var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  cursor: grab;
+  transition:
+    box-shadow var(--tf-duration-fast) var(--tf-ease-standard),
+    border-color var(--tf-duration-fast) var(--tf-ease-standard);
+
+  &:hover {
+    border-color: var(--mat-sys-primary);
+    box-shadow: var(--tf-shadow-sm);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+.tf-kanban-card__top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--tf-space-1);
+}
+.tf-kanban-card__title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+.tf-kanban-card__menu-trigger {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  flex-shrink: 0;
+  margin: -4px -4px 0 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.tf-kanban-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--tf-space-2);
+  flex-wrap: wrap;
+}
+.tf-kanban-card__deadline {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mat-sys-on-surface-variant);
+
+  &--soon {
+    color: var(--tf-priority-medium);
+  }
+  &--overdue {
+    color: var(--mat-sys-error);
+  }
+}
+.tf-kanban-card__assignee {
+  margin-inline-start: auto;
+}
+
+// --- Inline "add task" row --------------------------------------------------
+.tf-kanban-add {
+  padding: var(--tf-space-1);
+}
+.tf-kanban-add__input {
+  width: 100%;
+  font: inherit;
+  font-size: 0.875rem;
+  padding: var(--tf-space-2) var(--tf-space-3);
+  border-radius: var(--mat-sys-corner-medium);
+  border: 1px solid var(--mat-sys-primary);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--mat-sys-primary);
+  }
+}

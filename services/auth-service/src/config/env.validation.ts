@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNumberString, MinLength, validateSync } from 'class-validator';
+import { IsEmail, IsString, IsNumberString, IsOptional, MinLength, validateSync } from 'class-validator';
 
 // This class defines exactly which env vars must exist and their rules.
 // If any are missing or invalid, the app throws on startup instead of
@@ -37,6 +37,29 @@ class EnvironmentVariables {
 
   @IsNumberString()
   REFRESH_TTL_DAYS: string;
+
+  @IsString()
+  KAFKA_BROKER: string;
+
+  // The browser origin allowed to send credentialed (cookie) requests here.
+  // Optional: falls back to reflecting the request origin (dev-friendly).
+  // Set explicitly in production instead of relying on the reflection default.
+  @IsOptional()
+  @IsString()
+  CORS_ORIGIN?: string;
+
+  // Bootstrap admin: on startup, if set, this account is created (or an
+  // existing account with this email is promoted) with role=admin — the
+  // only way to obtain the very first admin without editing the database
+  // directly. Leave both unset to skip bootstrapping in this environment.
+  @IsOptional()
+  @IsEmail()
+  ADMIN_EMAIL?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(8, { message: 'ADMIN_PASSWORD must be at least 8 chars' })
+  ADMIN_PASSWORD?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

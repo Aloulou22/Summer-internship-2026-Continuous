@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -11,7 +13,19 @@ async function bootstrap() {
     new ValidationPipe({ whitelist: true, transform: true }),
   );
 
-  app.enableCors();
+  // Needed to read the refresh-token httpOnly cookie on /auth/refresh and
+  // /auth/logout (see auth.controller.ts).
+  app.use(cookieParser());
+
+  // credentials: true is required for the browser to send/receive the
+  // refresh-token cookie. A wildcard origin is rejected by browsers when
+  // credentials are involved, so this reflects the caller's origin (or uses
+  // CORS_ORIGIN if pinned) instead of '*'.
+  const configService = app.get(ConfigService);
+  app.enableCors({
+    origin: configService.get<string>('CORS_ORIGIN') || true,
+    credentials: true,
+  });
 
   // Swagger UI available at /docs
   const config = new DocumentBuilder()

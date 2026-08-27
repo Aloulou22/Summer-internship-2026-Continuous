@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TeamsService } from './teams.service';
 import { TeamsController } from './teams.controller';
 import { Team } from './entities/team.entity';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Team])],
   controllers: [TeamsController],
-  providers: [TeamsService],
+  providers: [TeamsService, RolesGuard],
   exports: [TeamsService],
 })
 export class TeamsModule {}

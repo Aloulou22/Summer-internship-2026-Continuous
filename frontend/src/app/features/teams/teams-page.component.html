@@ -1,0 +1,51 @@
+<div class="tf-teams">
+  <header class="tf-teams__header">
+    <h1>Teams</h1>
+    <p class="tf-teams__subtitle">Browse teams and see who's on them.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="tf-teams__grid">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="tf-team-card">
+          <tf-skeleton height="1.25rem" width="50%" />
+          <tf-skeleton height="0.875rem" width="80%" />
+          <tf-skeleton height="2rem" width="60%" />
+        </div>
+      }
+    </div>
+  } @else if (teams().length === 0) {
+    <tf-empty-state
+      icon="groups"
+      title="No teams yet"
+      message="Teams are created by an administrator."
+    />
+  } @else {
+    <div class="tf-teams__grid">
+      @for (team of teams(); track team.id) {
+        <div class="tf-team-card">
+          <div class="tf-team-card__header">
+            <h2>{{ team.name }}</h2>
+            <span class="tf-team-card__count">{{ team.members.length }}</span>
+          </div>
+
+          @if (team.description) {
+            <p class="tf-team-card__description">{{ team.description }}</p>
+          }
+
+          @if (team.members.length === 0) {
+            <p class="tf-team-card__empty">No members yet.</p>
+          } @else {
+            <ul class="tf-team-card__members">
+              @for (member of team.members; track member.userId) {
+                <li [matTooltip]="member.fullName">
+                  <tf-avatar [name]="member.fullName" [imageUrl]="member.avatarUrl" size="32px" />
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

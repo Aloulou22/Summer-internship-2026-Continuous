@@ -1,0 +1,69 @@
+<div class="tf-projects">
+  <header class="tf-projects__header">
+    <div>
+      <h1>Projects</h1>
+      <p class="tf-projects__subtitle">Projects you own or are a member of.</p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="createProject()">
+      <mat-icon>add</mat-icon>
+      New project
+    </button>
+  </header>
+
+  @if (loading()) {
+    <div class="tf-projects__grid">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="tf-project-tile">
+          <tf-skeleton height="1.25rem" width="70%" />
+          <tf-skeleton height="0.875rem" width="90%" />
+          <tf-skeleton height="0.875rem" width="40%" />
+        </div>
+      }
+    </div>
+  } @else if (projects().length === 0) {
+    <tf-empty-state
+      icon="folder_open"
+      title="No projects yet"
+      message="Create your first project to start organizing tasks and inviting your team."
+    >
+      <button mat-flat-button color="primary" type="button" (click)="createProject()">
+        Create a project
+      </button>
+    </tf-empty-state>
+  } @else {
+    <div class="tf-projects__grid">
+      @for (project of projects(); track project.id) {
+        <button class="tf-project-tile" type="button" (click)="openProject(project)">
+          <div class="tf-project-tile__top">
+            <span class="tf-project-tile__name">{{ project.name }}</span>
+            <span class="tf-project-tile__status">
+              <mat-icon>{{ projectStatusMeta[project.status].icon }}</mat-icon>
+              {{ projectStatusMeta[project.status].label }}
+            </span>
+          </div>
+          @if (project.description) {
+            <p class="tf-project-tile__description">{{ project.description }}</p>
+          }
+          <div class="tf-project-tile__footer">
+            @if (project.category; as category) {
+              <span class="tf-project-tile__category">
+                <span class="tf-project-tile__dot" [style.background]="category.color || 'var(--mat-sys-primary)'"></span>
+                {{ category.name }}
+              </span>
+            }
+            @if (project.deadline) {
+              <span
+                class="tf-project-tile__deadline"
+                [class.tf-project-tile__deadline--overdue]="relDeadline(project.deadline).overdue"
+                [class.tf-project-tile__deadline--soon]="relDeadline(project.deadline).dueSoon"
+              >
+                <mat-icon>event</mat-icon>
+                {{ relDeadline(project.deadline).text }}
+              </span>
+            }
+          </div>
+        </button>
+      }
+    </div>
+  }
+</div>
