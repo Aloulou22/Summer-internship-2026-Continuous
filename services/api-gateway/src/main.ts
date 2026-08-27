@@ -30,6 +30,11 @@ async function bootstrap() {
   app.enableCors({
     origin: config.get<string>('CORS_ORIGIN') || true,
     credentials: true,
+    // Without this, the browser can't cache the preflight decision (Chrome's
+    // default is ~5s), so nearly every authenticated request — anything
+    // carrying the Authorization header — pays a full extra OPTIONS
+    // round-trip first. 24h lets it cache for the whole session instead.
+    maxAge: 86400,
   });
 
   const routes: Route[] = [

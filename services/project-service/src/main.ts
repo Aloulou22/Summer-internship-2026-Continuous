@@ -10,7 +10,9 @@ async function bootstrap() {
   // browsers reject once the gateway's proxied response carries credentials
   // (Angular sends withCredentials: true on every request). Reflect the
   // origin instead, matching the gateway and auth-service.
-  app.enableCors({ origin: true, credentials: true });
+  // maxAge lets the browser cache the preflight decision instead of sending
+  // an extra OPTIONS request before nearly every call.
+  app.enableCors({ origin: true, credentials: true, maxAge: 86400 });
 
   const config = new DocumentBuilder()
     .setTitle('Project Service')

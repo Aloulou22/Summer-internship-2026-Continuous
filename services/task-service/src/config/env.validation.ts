@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNumberString, IsUrl, MinLength, validateSync } from 'class-validator';
+import { IsString, IsNumberString, IsUrl, IsOptional, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsNumberString() PORT: string;
@@ -19,6 +19,12 @@ class EnvironmentVariables {
   JWT_ACCESS_SECRET: string;
 
   @IsString() KAFKA_BROKER: string;
+
+  // Set both to enable SASL/SCRAM + TLS for a hosted broker (e.g. Redpanda
+  // Cloud). Leave unset for an unauthenticated local broker.
+  @IsOptional() @IsString() KAFKA_SASL_USERNAME?: string;
+  @IsOptional() @IsString() KAFKA_SASL_PASSWORD?: string;
+
   @IsString() REDIS_HOST: string;
   @IsNumberString() REDIS_PORT: string;
 

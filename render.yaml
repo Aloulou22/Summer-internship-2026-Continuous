@@ -1,0 +1,235 @@
+
+# Render Blueprint — provisions the entire backend (6 services + 5 Postgres
+# databases + Redis) in one pass. Import at https://dashboard.render.com
+# ("New +" -> "Blueprint"). See services/*/​.env.example for what each var
+# does; this file wires the same values Docker Compose sets locally, just
+# addressed at Render's resources instead of compose service names.
+#
+# Kafka is NOT defined here: Render has no native Kafka product, and a
+# private-service Kafka container has no free tier. Point KAFKA_BROKER (and
+# the SASL vars) at an external broker instead — e.g. Redpanda Cloud's
+# Serverless tier, which is free with no credit card. You'll be prompted for
+# these on first import (see the `sync: false` vars below).
+#
+# All 6 app services run on the free web-service plan, which means each one
+# gets its own onrender.com URL (Render's free tier has no fully-private
+# option for a compute service). JWT verification still protects every
+# endpoint; this is a deliberate cost/isolation tradeoff, not an oversight.
+
+envVarGroups:
+  - name: shared-jwt
+    envVars:
+      # Generated once, then reused via `fromGroup` below so every service
+      # verifies tokens with the exact same secret Auth signs them with.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+
+databases:
+  - name: auth-db
+    databaseName: auth_db
+    user: auth_user
+    plan: free
+  - name: user-db
+    databaseName: user_db
+    user: user_user
+    plan: free
+  - name: project-db
+    databaseName: project_db
+    user: project_user
+    plan: free
+  - name: task-db
+    databaseName: task_db
+    user: task_user
+    plan: free
+  - name: notification-db
+    databaseName: notification_db
+    user: notification_user
+    plan: free
+
+services:
+  # ==================== REDIS (Render Key Value) ====================
+  - type: keyvalue
+    name: taskflow-redis
+    plan: free
+    ipAllowList: [] # private network only — no public internet access
+
+  # ==================== AUTH SERVICE ====================
+  - type: web
+    name: auth-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/auth-service/Dockerfile
+    dockerContext: ./services/auth-service
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        fromDatabase: { name: auth-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: auth-db, property: port }
+      - key: DB_USER
+        fromDatabase: { name: auth-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: auth-db, property: password }
+      - key: DB_NAME
+        fromDatabase: { name: auth-db, property: database }
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: REFRESH_TTL_DAYS
+        value: "7"
+      - key: KAFKA_BROKER
+        sync: false # e.g. seed-xxxx.redpanda.com:9092
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false # your Vercel domain, e.g. https://your-app.vercel.app
+      - key: ADMIN_EMAIL
+        sync: false # optional — bootstrap admin, leave blank to skip
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # ==================== USER SERVICE ====================
+  - type: web
+    name: user-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/user-service/Dockerfile
+    dockerContext: ./services/user-service
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3002
+      - key: DB_HOST
+        fromDatabase: { name: user-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: user-db, property: port }
+      - key: DB_USER
+        fromDatabase: { name: user-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: user-db, property: password }
+      - key: DB_NAME
+        fromDatabase: { name: user-db, property: database }
+      - key: KAFKA_BROKER
+        sync: false
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+
+  # ==================== PROJECT SERVICE ====================
+  - type: web
+    name: project-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/project-service/Dockerfile
+    dockerContext: ./services/project-service
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3003
+      - key: DB_HOST
+        fromDatabase: { name: project-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: project-db, property: port }
+      - key: DB_USER
+        fromDatabase: { name: project-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: project-db, property: password }
+      - key: DB_NAME
+        fromDatabase: { name: project-db, property: database }
+      - key: REDIS_HOST
+        fromService: { name: taskflow-redis, type: keyvalue, property: host }
+      - key: REDIS_PORT
+        fromService: { name: taskflow-redis, type: keyvalue, property: port }
+
+  # ==================== TASK SERVICE ====================
+  - type: web
+    name: task-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/task-service/Dockerfile
+    dockerContext: ./services/task-service
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3004
+      - key: DB_HOST
+        fromDatabase: { name: task-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: task-db, property: port }
+      - key: DB_USER
+        fromDatabase: { name: task-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: task-db, property: password }
+      - key: DB_NAME
+        fromDatabase: { name: task-db, property: database }
+      - key: KAFKA_BROKER
+        sync: false
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+      - key: REDIS_HOST
+        fromService: { name: taskflow-redis, type: keyvalue, property: host }
+      - key: REDIS_PORT
+        fromService: { name: taskflow-redis, type: keyvalue, property: port }
+      # Fixed internal address — project-service's own PORT above is 3003,
+      # and Render resolves other services by name on the private network,
+      # same convention docker-compose.yml already uses.
+      - key: PROJECT_SERVICE_URL
+        value: http://project-service:3003
+
+  # ==================== NOTIFICATION SERVICE ====================
+  - type: web
+    name: notification-service
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/notification-service/Dockerfile
+    dockerContext: ./services/notification-service
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3005
+      - key: DB_HOST
+        fromDatabase: { name: notification-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: notification-db, property: port }
+      - key: DB_USER
+        fromDatabase: { name: notification-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: notification-db, property: password }
+      - key: DB_NAME
+        fromDatabase: { name: notification-db, property: database }
+      - key: KAFKA_BROKER
+        sync: false
+      - key: KAFKA_SASL_USERNAME
+        sync: false
+      - key: KAFKA_SASL_PASSWORD
+        sync: false
+
+  # ==================== API GATEWAY (the only public entry point) ====================
+  - type: web
+    name: api-gateway
+    runtime: docker
+    plan: free
+    dockerfilePath: ./services/api-gateway/Dockerfile
+    dockerContext: ./services/api-gateway
+    envVars:
+      - fromGroup: shared-jwt
+      - key: PORT
+        value: 3000
+      - key: AUTH_SERVICE_URL
+        value: http://auth-service:3001
+      - key: USER_SERVICE_URL
+        value: http://user-service:3002
+      - key: PROJECT_SERVICE_URL
+        value: http://project-service:3003
+      - key: TASK_SERVICE_URL
+        value: http://task-service:3004
+      - key: NOTIFICATION_SERVICE_URL
+        value: http://notification-service:3005
+      - key: CORS_ORIGIN
+        sync: false # your Vercel domain, e.g. https://your-app.vercel.app

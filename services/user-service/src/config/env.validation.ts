@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNumberString, MinLength, validateSync } from 'class-validator';
+import { IsString, IsNumberString, IsOptional, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsNumberString() PORT: string;
@@ -20,6 +20,11 @@ class EnvironmentVariables {
 
   @IsString()
   KAFKA_BROKER: string;
+
+  // Set both to enable SASL/SCRAM + TLS for a hosted broker (e.g. Redpanda
+  // Cloud). Leave unset for an unauthenticated local broker.
+  @IsOptional() @IsString() KAFKA_SASL_USERNAME?: string;
+  @IsOptional() @IsString() KAFKA_SASL_PASSWORD?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

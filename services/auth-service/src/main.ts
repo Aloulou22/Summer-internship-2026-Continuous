@@ -25,6 +25,9 @@ async function bootstrap() {
   app.enableCors({
     origin: configService.get<string>('CORS_ORIGIN') || true,
     credentials: true,
+    // Lets the browser cache the preflight decision instead of sending an
+    // extra OPTIONS request before nearly every call (see api-gateway/main.ts).
+    maxAge: 86400,
   });
 
   // Swagger UI available at /docs

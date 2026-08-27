@@ -41,6 +41,11 @@ class EnvironmentVariables {
   @IsString()
   KAFKA_BROKER: string;
 
+  // Set both to enable SASL/SCRAM + TLS for a hosted broker (e.g. Redpanda
+  // Cloud). Leave unset for an unauthenticated local broker.
+  @IsOptional() @IsString() KAFKA_SASL_USERNAME?: string;
+  @IsOptional() @IsString() KAFKA_SASL_PASSWORD?: string;
+
   // The browser origin allowed to send credentialed (cookie) requests here.
   // Optional: falls back to reflecting the request origin (dev-friendly).
   // Set explicitly in production instead of relying on the reflection default.
