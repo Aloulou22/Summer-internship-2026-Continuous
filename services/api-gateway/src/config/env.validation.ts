@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNumberString, IsUrl, IsOptional, MinLength, validateSync } from 'class-validator';
+import { IsString, IsNumberString, IsOptional, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsNumberString() PORT: string;
@@ -13,11 +13,15 @@ class EnvironmentVariables {
   })
   JWT_ACCESS_SECRET: string;
 
-  @IsUrl({ require_tld: false }) AUTH_SERVICE_URL: string;
-  @IsUrl({ require_tld: false }) USER_SERVICE_URL: string;
-  @IsUrl({ require_tld: false }) PROJECT_SERVICE_URL: string;
-  @IsUrl({ require_tld: false }) TASK_SERVICE_URL: string;
-  @IsUrl({ require_tld: false }) NOTIFICATION_SERVICE_URL: string;
+  // Bare host[:port] of each downstream service (e.g. "task-service:3004"),
+  // not a full URL — main.ts prepends the http:// scheme itself. Render's
+  // private-network hostnames are generated per-service and can't be
+  // hardcoded, so these come from fromService in render.yaml.
+  @IsString() AUTH_SERVICE_URL: string;
+  @IsString() USER_SERVICE_URL: string;
+  @IsString() PROJECT_SERVICE_URL: string;
+  @IsString() TASK_SERVICE_URL: string;
+  @IsString() NOTIFICATION_SERVICE_URL: string;
 
   // The browser origin allowed to send credentialed (cookie) requests. This
   // is the hop that actually matters for the refresh-token cookie, since

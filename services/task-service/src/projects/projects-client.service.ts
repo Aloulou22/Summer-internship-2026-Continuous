@@ -26,7 +26,10 @@ export class ProjectsClientService {
   async assertMember(projectId: string, userId: string, authHeader?: string): Promise<void> {
     if (!authHeader) throw new ForbiddenException('Missing credentials');
 
-    const baseUrl = this.config.get<string>('PROJECT_SERVICE_URL');
+    // Bare host[:port] (see env.validation.ts) — the scheme is prepended
+    // here rather than stored in the env var, since Render's private-network
+    // hostname for project-service isn't known until it's created.
+    const baseUrl = `http://${this.config.get<string>('PROJECT_SERVICE_URL')}`;
     try {
       const { data } = await firstValueFrom(
         this.http.get<ProjectMemberDto[]>(`${baseUrl}/projects/${projectId}/members`, {

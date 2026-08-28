@@ -182,11 +182,13 @@ services:
         fromService: { name: taskflow-redis, type: keyvalue, property: host }
       - key: REDIS_PORT
         fromService: { name: taskflow-redis, type: keyvalue, property: port }
-      # Fixed internal address — project-service's own PORT above is 3003,
-      # and Render resolves other services by name on the private network,
-      # same convention docker-compose.yml already uses.
+      # `hostport` gives the bare "host:port" of project-service's actual
+      # generated private-network hostname (Render assigns a per-service
+      # hostname like project-service-xxxx, not the literal name — a
+      # hardcoded value here 404s with ENOTFOUND). See projects-client.service.ts,
+      # which prepends the http:// scheme itself.
       - key: PROJECT_SERVICE_URL
-        value: http://project-service:3003
+        fromService: { name: project-service, type: web, property: hostport }
 
   # ==================== NOTIFICATION SERVICE ====================
   - type: web
@@ -227,15 +229,19 @@ services:
       - fromGroup: shared-jwt
       - key: PORT
         value: 3000
+      # `hostport` gives each service's actual generated private-network
+      # hostname ("host:port") — Render assigns a per-service hostname like
+      # auth-service-xxxx, not the literal name, so a hardcoded value here
+      # 404s with ENOTFOUND. main.ts prepends the http:// scheme itself.
       - key: AUTH_SERVICE_URL
-        value: http://auth-service:3001
+        fromService: { name: auth-service, type: web, property: hostport }
       - key: USER_SERVICE_URL
-        value: http://user-service:3002
+        fromService: { name: user-service, type: web, property: hostport }
       - key: PROJECT_SERVICE_URL
-        value: http://project-service:3003
+        fromService: { name: project-service, type: web, property: hostport }
       - key: TASK_SERVICE_URL
-        value: http://task-service:3004
+        fromService: { name: task-service, type: web, property: hostport }
       - key: NOTIFICATION_SERVICE_URL
-        value: http://notification-service:3005
+        fromService: { name: notification-service, type: web, property: hostport }
       - key: CORS_ORIGIN
         sync: false # your Vercel domain, e.g. https://your-app.vercel.app
