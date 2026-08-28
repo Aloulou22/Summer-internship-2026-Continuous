@@ -37,19 +37,14 @@ async function bootstrap() {
     maxAge: 86400,
   });
 
-  // *_SERVICE_URL holds a bare host[:port] (e.g. "task-service:3004" locally,
-  // or a generated "task-service-xxxx:3004" on Render's private network via
-  // fromService — see render.yaml) rather than a full URL, since Render's
-  // internal hostnames aren't known until the target service is created and
-  // can't be hardcoded. The scheme is prepended here instead.
   const routes: Route[] = [
-    { path: '/auth', target: `http://${config.get<string>('AUTH_SERVICE_URL')}`, public: true },
-    { path: '/profiles', target: `http://${config.get<string>('USER_SERVICE_URL')}` },
-    { path: '/teams', target: `http://${config.get<string>('USER_SERVICE_URL')}` },
-    { path: '/projects', target: `http://${config.get<string>('PROJECT_SERVICE_URL')}` },
-    { path: '/categories', target: `http://${config.get<string>('PROJECT_SERVICE_URL')}` },
-    { path: '/tasks', target: `http://${config.get<string>('TASK_SERVICE_URL')}` },
-    { path: '/notifications', target: `http://${config.get<string>('NOTIFICATION_SERVICE_URL')}` },
+    { path: '/auth', target: config.get<string>('AUTH_SERVICE_URL'), public: true },
+    { path: '/profiles', target: config.get<string>('USER_SERVICE_URL') },
+    { path: '/teams', target: config.get<string>('USER_SERVICE_URL') },
+    { path: '/projects', target: config.get<string>('PROJECT_SERVICE_URL') },
+    { path: '/categories', target: config.get<string>('PROJECT_SERVICE_URL') },
+    { path: '/tasks', target: config.get<string>('TASK_SERVICE_URL') },
+    { path: '/notifications', target: config.get<string>('NOTIFICATION_SERVICE_URL') },
   ];
 
   for (const route of routes) {

@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsString, IsNumberString, IsOptional, MinLength, validateSync } from 'class-validator';
+import { IsString, IsNumberString, IsUrl, IsOptional, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsNumberString() PORT: string;
@@ -31,9 +31,10 @@ class EnvironmentVariables {
   // Task Service has no membership data of its own (Database per Service) —
   // it asks Project Service "is this caller a member of this project?"
   // over HTTP before allowing any read/write on a task. See
-  // src/projects/projects-client.service.ts. Bare host[:port], not a full
-  // URL — see api-gateway's env.validation.ts for why.
-  @IsString()
+  // src/projects/projects-client.service.ts. Full URL — see api-gateway's
+  // env.validation.ts for why this must be a public URL on Render, not an
+  // internal hostname.
+  @IsUrl({ require_tld: false })
   PROJECT_SERVICE_URL: string;
 }
 
