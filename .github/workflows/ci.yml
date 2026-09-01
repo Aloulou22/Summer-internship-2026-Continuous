@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -61,7 +61,7 @@ jobs:
         working-directory: services/${{ matrix.service }}
         run: npm run build
 
-      # Railway builds each service straight from this Dockerfile, so a build
+      # Render builds each service straight from this Dockerfile, so a build
       # failure here means the deploy would fail too — catch it in CI instead.
       - name: Docker build check
         run: docker build -t taskflow/${{ matrix.service }}:ci services/${{ matrix.service }}
@@ -90,3 +90,91 @@ jobs:
       - name: Test
         working-directory: frontend
         run: npx ng test --watch=false --browsers=ChromeHeadless
+
+  # ==================== CD ====================
+  # Both deploy jobs are deliberately gated on the matching build job passing,
+  # which is the whole point of deploying from CI rather than letting Render
+  # and Vercel auto-deploy on push: a broken commit never reaches production.
+  # Auto-deploy must be turned OFF on both platforms, or every push deploys
+  # twice — once ungated by the platform, once gated from here.
+  #
+  # `always()` is required in both `if` conditions below. `needs` normally
+  # skips a job when any dependency was skipped, and the build jobs skip
+  # whenever their half of the repo didn't change — so without `always()` a
+  # frontend-only push would skip the frontend deploy too. With it, the
+  # explicit `result == 'success'` check does the gating instead.
+
+  deploy-backend:
+    needs: [changes, backend]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.backend.result == 'success'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # Deploy only the services that actually changed — same filter output the
+      # build job used, so the two can never disagree about what's in scope.
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.backend) }}
+    steps:
+      # A Render deploy hook is a per-service secret URL; POSTing to it starts
+      # a deploy of that service's latest main. Create one per service under
+      # Render dashboard -> <service> -> Settings -> Deploy Hook.
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_API_GATEWAY: ${{ secrets.RENDER_DEPLOY_HOOK_API_GATEWAY }}
+          RENDER_DEPLOY_HOOK_AUTH_SERVICE: ${{ secrets.RENDER_DEPLOY_HOOK_AUTH_SERVICE }}
+          RENDER_DEPLOY_HOOK_USER_SERVICE: ${{ secrets.RENDER_DEPLOY_HOOK_USER_SERVICE }}
+          RENDER_DEPLOY_HOOK_PROJECT_SERVICE: ${{ secrets.RENDER_DEPLOY_HOOK_PROJECT_SERVICE }}
+          RENDER_DEPLOY_HOOK_TASK_SERVICE: ${{ secrets.RENDER_DEPLOY_HOOK_TASK_SERVICE }}
+          RENDER_DEPLOY_HOOK_NOTIFICATION_SERVICE: ${{ secrets.RENDER_DEPLOY_HOOK_NOTIFICATION_SERVICE }}
+        run: |
+          set -euo pipefail
+          # Secret names can't contain dashes, so api-gateway -> API_GATEWAY.
+          # The ${!var} indirection then reads that secret out of the env above,
+          # since `secrets` itself can't be indexed by a shell variable.
+          key="RENDER_DEPLOY_HOOK_$(echo '${{ matrix.service }}' | tr 'a-z-' 'A-Z_')"
+          hook="${!key:-}"
+          if [ -z "$hook" ]; then
+            echo "::error::Missing secret $key — add this service's Render deploy hook."
+            exit 1
+          fi
+          curl --fail --silent --show-error -X POST "$hook"
+          echo "Triggered Render deploy for ${{ matrix.service }}"
+
+  deploy-frontend:
+    needs: [changes, frontend]
+    if: >-
+      always() &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.frontend.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      # `pull` fetches the project's own settings (framework preset, root
+      # directory, output directory, env vars) so the build here matches what
+      # Vercel would have built itself.
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Building here rather than on Vercel keeps the deploy honest: the exact
+      # artifact CI produced is what ships, and --prebuilt skips a rebuild.
+      - name: Build
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
