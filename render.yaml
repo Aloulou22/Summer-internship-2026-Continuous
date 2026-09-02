@@ -88,8 +88,12 @@ services:
         sync: false
       - key: KAFKA_SASL_PASSWORD
         sync: false
+      # The deployed frontend's origin. Auth is only ever reached through the
+      # gateway, so this mainly matters for the refresh-token cookie travelling
+      # back through the proxy — it must be a pinned origin, never '*', because
+      # browsers reject a wildcard on credentialed requests.
       - key: CORS_ORIGIN
-        sync: false # your Vercel domain, e.g. https://your-app.vercel.app
+        value: https://summer-internship-2026-continuous.vercel.app
       - key: ADMIN_EMAIL
         sync: false # optional — bootstrap admin, leave blank to skip
       - key: ADMIN_PASSWORD
@@ -247,5 +251,10 @@ services:
         fromService: { name: task-service, type: web, envVarKey: RENDER_EXTERNAL_URL }
       - key: NOTIFICATION_SERVICE_URL
         fromService: { name: notification-service, type: web, envVarKey: RENDER_EXTERNAL_URL }
+      # The deployed frontend's origin — the browser only ever talks to the
+      # gateway, so this is the CORS decision that actually matters. Pinned
+      # rather than reflected ('*' or origin: true) so only the real frontend
+      # can make credentialed calls. Vercel preview URLs are deliberately not
+      # allowed; add them here if previews ever need to hit production.
       - key: CORS_ORIGIN
-        sync: false # your Vercel domain, e.g. https://your-app.vercel.app
+        value: https://summer-internship-2026-continuous.vercel.app
