@@ -1,0 +1,39 @@
+<h2 mat-dialog-title>Add member to {{ data.teamName }}</h2>
+
+<mat-dialog-content class="tf-form-content">
+  <mat-form-field appearance="outline">
+    <mat-label>Member</mat-label>
+    <input
+      matInput
+      [formControl]="userSearch"
+      [matAutocomplete]="auto"
+      (input)="selected.set(null)"
+      placeholder="Search by name…"
+      autocomplete="off"
+    />
+    <mat-autocomplete
+      #auto="matAutocomplete"
+      [displayWith]="displayName"
+      (optionSelected)="selected.set($event.option.value)"
+    >
+      @for (profile of candidates(); track profile.userId) {
+        <mat-option [value]="profile">
+          {{ profile.fullName }}
+          @if (profile.team) {
+            <span class="tf-add-team-member__current-team">· on {{ profile.team.name }}</span>
+          }
+        </mat-option>
+      } @empty {
+        <mat-option disabled>No matching users</mat-option>
+      }
+    </mat-autocomplete>
+    <mat-hint>Someone already on another team is moved to this one.</mat-hint>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" [mat-dialog-close]="undefined">Cancel</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="!selected()" (click)="submit()">
+    Add member
+  </button>
+</mat-dialog-actions>

@@ -40,6 +40,15 @@
                 <button
                   mat-icon-button
                   type="button"
+                  (click)="addMember(team)"
+                  aria-label="Add member"
+                  matTooltip="Add member"
+                >
+                  <mat-icon>person_add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  type="button"
                   (click)="editTeam(team)"
                   aria-label="Edit team"
                   matTooltip="Edit"
@@ -65,6 +74,24 @@
 
           @if (team.members.length === 0) {
             <p class="tf-team-card__empty">No members yet.</p>
+          } @else if (canManage()) {
+            <ul class="tf-team-card__roster">
+              @for (member of team.members; track member.userId) {
+                <li>
+                  <tf-avatar [name]="member.fullName" [imageUrl]="member.avatarUrl" size="28px" />
+                  <span class="tf-team-card__roster-name">{{ member.fullName }}</span>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="removeMember(team, member)"
+                    [attr.aria-label]="'Remove ' + member.fullName + ' from team'"
+                    matTooltip="Remove from team"
+                  >
+                    <mat-icon>person_remove</mat-icon>
+                  </button>
+                </li>
+              }
+            </ul>
           } @else {
             <ul class="tf-team-card__members">
               @for (member of team.members; track member.userId) {

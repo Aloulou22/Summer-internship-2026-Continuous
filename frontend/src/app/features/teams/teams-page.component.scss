@@ -88,6 +88,43 @@
   font-style: italic;
 }
 
+// Admin view: one row per member so each can be removed.
+.tf-team-card__roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-space-1);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--tf-space-2);
+  }
+
+  button {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+.tf-team-card__roster-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.875rem;
+}
+
 .tf-team-card__members {
   list-style: none;
   margin: 0;

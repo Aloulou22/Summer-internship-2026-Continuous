@@ -8,8 +8,13 @@ import { AuthService } from '../../core/services/auth.service';
 import { TeamsService } from '../../core/services/teams.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreateTeamRequest, TeamDetail } from '../../core/models/team.model';
+import { Profile } from '../../core/models/profile.model';
 import { openConfirmDialog } from '../../shared/ui/confirm-dialog/confirm-dialog.component';
 import { TeamFormDialogComponent, TeamFormDialogData } from './team-form-dialog/team-form-dialog.component';
+import {
+  AddTeamMemberDialogComponent,
+  AddTeamMemberDialogData,
+} from './add-team-member-dialog/add-team-member-dialog.component';
 
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
@@ -94,6 +99,49 @@ export class TeamsPageComponent {
         this.teamsService.remove(team.id).subscribe(() => {
           this.teams.update((all) => all.filter((t) => t.id !== team.id));
           this.toast.success('Team deleted');
+        });
+      });
+  }
+
+  addMember(team: TeamDetail): void {
+    const ref = this.dialog.open<AddTeamMemberDialogComponent, AddTeamMemberDialogData, string>(
+      AddTeamMemberDialogComponent,
+      {
+        data: { teamName: team.name, existingUserIds: team.members.map((m) => m.userId) },
+        width: '440px',
+      },
+    );
+    ref.afterClosed().subscribe((userId) => {
+      if (!userId) return;
+      this.teamsService.addMember(team.id, userId).subscribe((updated) => {
+        // One team per user: joining this team removed them from any other,
+        // so drop them from every other card too.
+        this.teams.update((all) =>
+          all.map((t) =>
+            t.id === updated.id
+              ? updated
+              : { ...t, members: t.members.filter((m) => m.userId !== userId) },
+          ),
+        );
+        const name = updated.members.find((m) => m.userId === userId)?.fullName ?? 'Member';
+        this.toast.success(`${name} added to ${updated.name}`);
+      });
+    });
+  }
+
+  removeMember(team: TeamDetail, member: Profile): void {
+    openConfirmDialog(this.dialog, {
+      title: 'Remove member?',
+      message: `${member.fullName} will be removed from "${team.name}".`,
+      confirmLabel: 'Remove',
+      danger: true,
+    })
+      .afterClosed()
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.teamsService.removeMember(team.id, member.userId).subscribe((updated) => {
+          this.teams.update((all) => all.map((t) => (t.id === updated.id ? updated : t)));
+          this.toast.success(`${member.fullName} removed from ${updated.name}`);
         });
       });
   }

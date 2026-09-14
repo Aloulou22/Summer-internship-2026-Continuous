@@ -5,6 +5,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TeamsService } from './teams.service';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
+import { AddTeamMemberDto } from './dto/add-team-member.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -54,5 +55,25 @@ export class TeamsController {
   @ApiOperation({ summary: 'Delete a team (admin only)' })
   remove(@Param('id') id: string) {
     return this.teams.remove(id);
+  }
+
+  // Dedicated endpoints rather than letting PATCH /profiles/:userId set
+  // teamId: that route lets any user edit their own profile, which would let
+  // anyone put themselves on any team. Team membership stays admin-only, same
+  // as every other team mutation.
+  @Post(':id/members')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Add a user to a team, moving them off any other team (admin only)' })
+  addMember(@Param('id') id: string, @Body() dto: AddTeamMemberDto) {
+    return this.teams.addMember(id, dto.userId);
+  }
+
+  @Delete(':id/members/:userId')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Remove a user from a team (admin only)' })
+  removeMember(@Param('id') id: string, @Param('userId') userId: string) {
+    return this.teams.removeMember(id, userId);
   }
 }

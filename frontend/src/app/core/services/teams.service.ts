@@ -29,4 +29,17 @@ export class TeamsService {
   remove(id: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`${this.base}/${id}`);
   }
+
+  /**
+   * POST /teams/:id/members — admin only. A user belongs to at most one team,
+   * so this moves them off any team they were already on.
+   */
+  addMember(teamId: string, userId: string): Observable<TeamDetail> {
+    return this.http.post<TeamDetail>(`${this.base}/${teamId}/members`, { userId });
+  }
+
+  /** DELETE /teams/:id/members/:userId — admin only. */
+  removeMember(teamId: string, userId: string): Observable<TeamDetail> {
+    return this.http.delete<TeamDetail>(`${this.base}/${teamId}/members/${userId}`);
+  }
 }
