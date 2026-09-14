@@ -39,6 +39,15 @@ export class UserDirectoryService {
     return this.loadInFlight$;
   }
 
+  /**
+   * Re-fetches the directory. For pickers where a stale list matters: users
+   * who registered after the first load, or someone moved to another team.
+   */
+  reload(): Observable<Profile[]> {
+    this._loaded.set(false);
+    return this.ensureLoaded();
+  }
+
   displayName(userId: string): string {
     return this.byUserId().get(userId)?.fullName ?? 'Unknown user';
   }

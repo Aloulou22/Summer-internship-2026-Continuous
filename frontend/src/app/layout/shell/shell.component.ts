@@ -1,11 +1,22 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map } from 'rxjs';
 
-import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSidenavContainer, MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
@@ -85,6 +96,8 @@ export class ShellComponent {
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly router = inject(Router);
   private readonly projectsService = inject(ProjectsService);
+  private readonly injector = inject(Injector);
+  private readonly sidenavContainer = viewChild.required(MatSidenavContainer);
 
   // The topbar search box used to be pure decoration (no handler wired up at
   // all) — this loads the user's projects once and filters them client-side,
@@ -93,6 +106,9 @@ export class ShellComponent {
   // can see in one place, so promising task search here would just recreate
   // the same "looks like it works but doesn't" problem.
   protected readonly searchQuery = signal('');
+  // Results show only while focus is inside the search box, so clicking
+  // anywhere else dismisses them.
+  protected readonly searchOpen = signal(false);
   private readonly allProjects = signal<Project[]>([]);
   protected readonly searchResults = computed<Project[]>(() => {
     const q = this.searchQuery().trim().toLowerCase();
@@ -124,6 +140,7 @@ export class ShellComponent {
   goToSearchResult(project: Project): void {
     this.router.navigate(['/projects', project.id]);
     this.searchQuery.set('');
+    this.searchOpen.set(false);
   }
 
   submitSearch(): void {
@@ -131,12 +148,38 @@ export class ShellComponent {
     if (first) this.goToSearchResult(first);
   }
 
+  onSearchFocusOut(event: FocusEvent): void {
+    const wrap = event.currentTarget as HTMLElement;
+    if (!wrap.contains(event.relatedTarget as Node | null)) this.searchOpen.set(false);
+  }
+
   toggleNav(drawer: { toggle: () => void }): void {
     if (this.isHandset()) {
       drawer.toggle();
-    } else {
-      this.collapsed.update((v) => !v);
+      return;
     }
+    this.collapsed.update((v) => !v);
+    // Material re-measures the content's margin only when a drawer opens,
+    // closes or changes mode — never when its width changes through a CSS
+    // class. Without this, collapsing leaves a gap beside the nav, expanding
+    // slides the nav over the page, and the saved state keeps it that way
+    // across reloads. Measure once the class is applied (enough on its own
+    // under reduced motion), then again when the width transition ends.
+    afterNextRender(() => this.sidenavContainer().updateContentMargins(), {
+      injector: this.injector,
+    });
+  }
+
+  onNavTransitionEnd(event: TransitionEvent): void {
+    // transitionend bubbles up from the nav items' own color transitions too.
+    if (event.target === event.currentTarget && event.propertyName === 'width') {
+      this.sidenavContainer().updateContentMargins();
+    }
+  }
+
+  /** In the handset overlay, following a link should reveal the page it opened. */
+  closeNavIfOverlay(drawer: { close: () => void }): void {
+    if (this.isHandset()) drawer.close();
   }
 
   setTheme(preference: ThemePreference): void {
@@ -152,7 +195,13 @@ export class ShellComponent {
   }
 
   logout(): void {
-    this.auth.logout().subscribe(() => this.router.navigateByUrl('/login'));
+    // Go to the login page whether or not the server call succeeds: the local
+    // session is cleared either way (AuthService.logout finalizes it), and
+    // staying on a protected page with no session is a dead end.
+    this.auth.logout().subscribe({
+      complete: () => this.router.navigateByUrl('/login'),
+      error: () => this.router.navigateByUrl('/login'),
+    });
   }
 
   private readCollapsed(): boolean {

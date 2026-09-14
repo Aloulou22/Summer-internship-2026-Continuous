@@ -61,7 +61,9 @@ export class AddTeamMemberDialogComponent {
     typeof value === 'string' ? value : (value?.fullName ?? '');
 
   constructor() {
-    this.directory.ensureLoaded().subscribe();
+    // Always refetch: the cached directory can predate new sign-ups, and the
+    // "on <team>" hint must reflect current membership.
+    this.directory.reload().subscribe();
   }
 
   submit(): void {
