@@ -1,10 +1,12 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, tap, timeout } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
 import { PlatformUser, User, UserRole } from '../models/user.model';
+
+const RESTORE_SESSION_TIMEOUT_MS = 8_000;
 
 /**
  * Owns the session: the access token (kept in memory only — never
@@ -91,6 +93,10 @@ export class AuthService {
   /** Called once at app bootstrap (provideAppInitializer). Never throws. */
   tryRestoreSession(): Observable<boolean> {
     return this.refreshSession().pipe(
+      // The first navigation waits on this, and coldStartRetryInterceptor can
+      // hold a refresh for up to a minute while a sleeping auth-service boots.
+      // Showing the login page after a few seconds beats a blank screen.
+      timeout({ first: RESTORE_SESSION_TIMEOUT_MS }),
       map(() => true),
       catchError(() => {
         this.clearSession();

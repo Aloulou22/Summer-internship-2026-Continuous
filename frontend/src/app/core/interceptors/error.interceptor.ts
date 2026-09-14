@@ -32,8 +32,17 @@ function extractMessage(error: HttpErrorResponse): string {
   // must be checked before trying to read a `.message` off the body.
   if (error.status === 0) return "Can't reach the server — check your connection and try again.";
 
+  // Arriving here with one of these means coldStartRetryInterceptor already
+  // gave up: a service is still booting (or down), not rejecting the request.
+  if (error.status === 429 || (error.status >= 502 && error.status <= 504)) {
+    return 'The server is still starting up — please try again in a moment.';
+  }
+
   const body: unknown = error.error;
-  if (body && typeof body === 'object' && 'message' in body) {
+  // A non-JSON error body (e.g. a plain-text "Too Many Requests" from the
+  // hosting edge) arrives as the SyntaxError from parsing it, whose own
+  // .message is parser output — not something to show a user.
+  if (body && typeof body === 'object' && !(body instanceof Error) && 'message' in body) {
     const message = (body as { message: unknown }).message;
     if (typeof message === 'string') return message;
     if (Array.isArray(message) && typeof message[0] === 'string') return message[0];

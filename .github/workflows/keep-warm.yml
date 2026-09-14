@@ -1,0 +1,50 @@
+name: Keep Render services warm
+
+# Render's free tier sleeps a service after ~15 minutes without inbound traffic,
+# and waking one takes 25-45s — long enough that the first visitor sees 429s and
+# a stalled dashboard. This pings every service from outside Render (a GitHub
+# runner) often enough that none of them sleeps during the day.
+#
+# Turn it off (Actions tab -> this workflow -> "Disable workflow") once it's no
+# longer needed. It is not free to leave running:
+#   - Render: 6 services awake ~16h/day use ~96 of the workspace's 750 free
+#     instance-hours per day — the monthly allowance lasts about a week.
+#   - GitHub: the repo is private, so every run bills Actions minutes.
+
+on:
+  schedule:
+    # Every 10 minutes, 06:00-21:59 UTC. Offset from :00 because GitHub delays
+    # top-of-the-hour schedules the most, and a late run lets services sleep.
+    - cron: '3,13,23,33,43,53 6-21 * * *'
+  workflow_dispatch: # "Run workflow" button: warm everything up on demand
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Ping every service
+        run: |
+          # Protected routes answer 401 before touching a database, so a ping is
+          # cheap once a service is up; a sleeping one holds the request until
+          # it has booted. All six run in parallel so one slow boot doesn't
+          # delay the rest.
+          urls=(
+            https://api-gateway-xafr.onrender.com/auth/me
+            https://auth-service-9kzh.onrender.com/auth/me
+            https://user-service-chvv.onrender.com/profiles/me
+            https://project-service-w2a0.onrender.com/projects
+            https://task-service-sfqn.onrender.com/tasks
+            https://notification-service-y1uh.onrender.com/notifications
+          )
+          for url in "${urls[@]}"; do
+            (
+              result=$(curl -s -o /dev/null -w '%{http_code} in %{time_total}s' --max-time 120 "$url") || result="no response"
+              echo "$result  $url"
+            ) &
+          done
+          wait

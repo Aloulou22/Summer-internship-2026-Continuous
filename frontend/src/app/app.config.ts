@@ -20,7 +20,9 @@ import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { coldStartRetryInterceptor } from './core/interceptors/cold-start-retry.interceptor';
 import { AuthService } from './core/services/auth.service';
+import { BackendWarmUpService } from './core/services/backend-warm-up.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,17 +33,26 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions(),
       withPreloading(PreloadAllModules),
     ),
-    // errorInterceptor is outermost (sees the final settled result once
-    // authInterceptor's own 401-retry logic has already run); authInterceptor
-    // is innermost, closest to the actual HTTP call, so its retry doesn't
-    // loop back through the toast interceptor.
-    provideHttpClient(withFetch(), withInterceptors([errorInterceptor, authInterceptor])),
+    // Outermost to innermost: errorInterceptor sees only the final settled
+    // result, after authInterceptor's 401-refresh logic has run; that in turn
+    // sees a request only after coldStartRetryInterceptor has ridden out any
+    // cold-start 429s, so a booting service never looks like an auth failure
+    // and never toasts mid-retry.
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([errorInterceptor, authInterceptor, coldStartRetryInterceptor]),
+    ),
     provideAnimationsAsync(),
     provideNativeDateAdapter(),
     // Material Symbols Outlined instead of the legacy "Material Icons" font
     // (loaded in index.html) for every <mat-icon> in the app.
     provideAppInitializer(() => {
       inject(MatIconRegistry).setDefaultFontSetClass('material-symbols-outlined');
+    }),
+    // Start waking the backend immediately, in parallel with everything below
+    // (not awaited) — see BackendWarmUpService.
+    provideAppInitializer(() => {
+      inject(BackendWarmUpService).start();
     }),
     // Silently exchange the refresh cookie (if any) for a session before the
     // router's first navigation, so a page reload doesn't flash the login
