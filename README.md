@@ -34,8 +34,7 @@ request after an idle period is therefore slow. See
 - [Testing](#testing)
 - [Continuous integration and deployment](#continuous-integration-and-deployment)
 - [Production deployment](#production-deployment)
-- [Known limitations](#known-limitations)
-
+  
 ## Features
 
 - Account registration and login, with refresh-token sessions that survive a
