@@ -452,21 +452,3 @@ user is signing in, and it retries cold-start responses with backoff so that a
 waking service appears as a slow request rather than an error. The scheduled
 keep-warm workflow prevents the situation during the day.
 
-## Known limitations
-
-- **Automated tests are minimal.** One frontend component test, no service
-  tests.
-- **Notifications are polled**, every 20 seconds, rather than pushed. The
-  backend has no WebSocket or SSE channel yet, although the client is
-  structured so that only the feed service would change.
-- **No distributed tracing.** A single user action can span four services with
-  no correlation id tying the logs together.
-- **Cache invalidation uses Redis `KEYS`**, which scans the whole keyspace and
-  blocks the server. `SCAN`, or a tracked set of keys, would be required at
-  real traffic levels.
-- **No dead-letter queue.** If a consumer fails to handle an event, that
-  notification is lost rather than retried.
-- **Database isolation is weakened in production** by the shared PostgreSQL
-  server described above.
-- **A user belongs to at most one team**, since membership is a single column
-  on the profile rather than a membership table.
